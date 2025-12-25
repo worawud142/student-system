@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ปพ.5 Digital Cloud v26.7</title>
+    <title>ปพ.5 Digital Cloud v27.3 (Minimal White)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -14,8 +14,9 @@
     <style>
         body {
             font-family: 'Prompt', sans-serif;
-            background-color: #f1f5f9;
+            background-color: #f8fafc;
             font-size: 18px;
+            color: #1e293b;
         }
 
         .tab-content {
@@ -26,16 +27,53 @@
             display: block;
         }
 
+        /* Navbar โทนขาวคลีน Glassmorphism */
+        nav.glass-nav {
+            background: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
         .nav-selector {
-            background: #1e293b;
-            color: #818cf8;
-            border: 2px solid #475569;
-            padding: 10px 20px;
-            border-radius: 15px;
-            font-weight: 800;
-            font-size: 18px;
+            background: #ffffff !important;
+            color: #475569 !important;
+            border: 1px solid #e2e8f0 !important;
+            padding: 8px 16px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 17px;
             outline: none;
+            transition: all 0.3s;
             cursor: pointer;
+        }
+
+        .nav-selector:focus {
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .nav-selector option {
+            background: white;
+            color: #1e293b;
+        }
+
+        .nav-link-modern {
+            color: #64748b;
+            font-weight: 700;
+            padding: 10px 18px;
+            border-radius: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-link-modern:hover {
+            color: #4f46e5;
+            background: #f1f5f9;
+        }
+
+        .nav-link-modern.active-tab {
+            background: #eef2ff !important;
+            color: #4f46e5 !important;
         }
 
         @media print {
@@ -71,7 +109,7 @@
             margin: 0 auto;
             border-radius: 2rem;
             overflow: hidden;
-            border: 4px solid #4f46e5;
+            border: 4px solid #6366f1;
         }
     </style>
 </head>
@@ -79,61 +117,74 @@
 <body>
 
     <div id="app">
-        <nav class="sticky top-0 z-50 bg-slate-900 shadow-2xl no-print">
-            <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-20">
-                <div class="flex items-center space-x-3">
-                    <span class="text-2xl font-black text-indigo-400 mr-2 uppercase italic">🏫 HUB</span>
-                    <select id="gradeSelector" onchange="filterSubjects(this.value)" class="nav-selector">
-                        <option value="">ระดับชั้น</option>
-                    </select>
-                    <select id="subjectSelector" onchange="changeActiveSubject(this.value)" class="nav-selector">
-                        <option value="">เลือกรายวิชา</option>
-                    </select>
-                    <button onclick="openClassModal()"
-                        class="bg-indigo-600 text-white px-5 py-2 rounded-2xl text-xs font-black shadow-lg hover:bg-indigo-500 transition-all">+
-                        เพิ่มวิชา</button>
+        <nav class="sticky top-0 z-50 no-print glass-nav h-24 flex items-center">
+            <div class="max-w-7xl mx-auto px-6 w-full flex justify-between items-center">
+                <div class="flex items-center space-x-6">
+                    <div class="flex flex-col border-r border-slate-200 pr-6 mr-2">
+                        <span class="text-2xl font-black text-slate-800 italic tracking-tighter logo-text">🏫 TEACHER
+                            HUB</span>
+                        <span class="text-[10px] text-indigo-500 font-bold tracking-[0.3em] uppercase text-center">Cloud
+                            System</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <select id="gradeSelector" onchange="filterSubjects(this.value)" class="nav-selector">
+                            <option value="">ชั้นเรียน</option>
+                        </select>
+                        <select id="subjectSelector" onchange="changeActiveSubject(this.value)" class="nav-selector">
+                            <option value="">รายวิชา</option>
+                        </select>
+                        <button onclick="openClassModal()"
+                            class="bg-slate-800 text-white p-2.5 rounded-xl hover:bg-slate-700 transition-all shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <div class="flex space-x-5 font-black text-lg">
-                    <button onclick="switchTab('dashboard')"
-                        class="text-slate-300 hover:text-white transition">สรุป</button>
-                    <button onclick="switchTab('attendance')"
-                        class="text-slate-300 hover:text-white transition">เช็คชื่อ</button>
-                    <button onclick="switchTab('scores')"
-                        class="text-slate-300 hover:text-white transition">คะแนน</button>
-                    <button onclick="switchTab('qr-cards')" class="text-amber-400">บัตร QR</button>
+                <div class="hidden lg:flex items-center space-x-1">
+                    <button id="nav-dashboard" onclick="switchTab('dashboard')"
+                        class="nav-link-modern active-tab">สรุปผล</button>
+                    <button id="nav-attendance" onclick="switchTab('attendance')"
+                        class="nav-link-modern">เช็คชื่อ</button>
+                    <button id="nav-scores" onclick="switchTab('scores')" class="nav-link-modern">คะแนน</button>
+                    <button id="nav-qr-cards" onclick="switchTab('qr-cards')"
+                        class="nav-link-modern text-orange-500">บัตร QR</button>
                     <button onclick="switchTab('class-report')"
-                        class="bg-indigo-500 px-6 py-2 rounded-full text-white shadow-xl">รายงาน</button>
+                        class="ml-4 bg-indigo-600 text-white px-7 py-3 rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">พิมพ์รายงาน</button>
                 </div>
             </div>
         </nav>
 
         <main class="max-w-7xl mx-auto p-6 md:p-10">
             <div id="status-screen" class="text-center py-20 text-slate-400 font-bold">
-                <div class="text-5xl mb-4 animate-bounce">🔍</div>
-                <p>กรุณาเลือกวิชาด้านบนเพื่อเริ่มจัดการครับ...</p>
+                <div class="text-5xl mb-4 animate-pulse">🔍</div>
+                <p>กรุณาเลือกวิชาและระดับชั้นด้านบนเพื่อเริ่มใช้งาน...</p>
             </div>
 
             <div id="main-ui" class="hidden space-y-10">
                 <div id="tab-attendance" class="tab-content">
                     <div class="max-w-7xl mx-auto mb-8 no-print">
                         <div
-                            class="bg-white p-6 rounded-[2.5rem] shadow-xl border border-indigo-100 flex flex-col lg:flex-row items-center justify-between gap-6">
+                            class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col lg:flex-row items-center justify-between gap-6">
                             <div class="flex items-center space-x-4">
-                                <span class="font-black text-slate-600">📅 วันที่เช็คชื่อ:</span>
+                                <span class="font-black text-slate-500 uppercase text-sm tracking-wider">📅
+                                    วันที่เช็คชื่อ:</span>
                                 <input type="date" id="global-att-date" onchange="syncAttendanceDate()"
-                                    class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 text-indigo-700 font-black outline-none text-xl">
+                                    class="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-slate-800 font-black outline-none focus:ring-2 ring-indigo-50 text-xl transition-all">
                             </div>
                             <div class="flex flex-wrap items-center gap-3">
                                 <div class="bg-slate-100 p-2 rounded-2xl flex shadow-inner">
                                     <button onclick="setAttMode('scanner')" id="btn-mode-scanner"
-                                        class="flex-1 md:px-6 py-3 rounded-xl text-xs font-black transition-all">📷
-                                        สแกน</button>
+                                        class="flex-1 md:px-8 py-3 rounded-xl text-xs font-black transition-all">📷 สแกน
+                                        QR</button>
                                     <button onclick="setAttMode('manual')" id="btn-mode-manual"
-                                        class="flex-1 md:px-6 py-3 rounded-xl text-xs font-black transition-all">📝
-                                        รายชื่อ</button>
+                                        class="flex-1 md:px-8 py-3 rounded-xl text-xs font-black transition-all">📝
+                                        ติ๊กชื่อ</button>
                                 </div>
                                 <button onclick="switchTab('att-summary-report')"
-                                    class="bg-emerald-600 text-white px-6 py-4 rounded-2xl text-xs font-black shadow-lg hover:bg-emerald-700 transition-all">📄
+                                    class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-8 py-4 rounded-2xl text-xs font-black hover:bg-emerald-600 hover:text-white transition-all">📄
                                     สรุปเวลาเรียนทั้งหมด</button>
                             </div>
                         </div>
@@ -141,18 +192,16 @@
                     <div class="flex flex-col lg:flex-row gap-10">
                         <div class="w-full lg:w-1/2 space-y-6">
                             <div id="area-scanner"
-                                class="bg-white p-8 rounded-[2.5rem] shadow-xl border-4 border-white text-center">
-                                <p class="mb-4 text-slate-400 font-bold italic">สแกนเพื่อเช็คชื่อเข้าวันที่เลือกด้านบน
-                                </p>
+                                class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 text-center">
                                 <div id="reader"></div>
                             </div>
                             <div id="area-manual"
-                                class="hidden bg-white p-8 rounded-[2.5rem] shadow-xl border border-white">
+                                class="hidden bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
                                 <div id="manual-list" class="space-y-3 max-h-[600px] overflow-y-auto pr-2"></div>
                             </div>
                         </div>
                         <div
-                            class="w-full lg:w-1/2 bg-white p-8 rounded-[3rem] shadow-xl border border-white overflow-x-auto text-center">
+                            class="w-full lg:w-1/2 bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 overflow-x-auto text-center">
                             <table class="w-full font-bold text-lg">
                                 <thead class="text-slate-400 text-xs font-black uppercase tracking-widest border-b">
                                     <tr>
@@ -171,50 +220,53 @@
 
                 <div id="tab-att-summary-report" class="tab-content text-center">
                     <button onclick="window.print()"
-                        class="no-print mb-8 bg-slate-900 text-white px-10 py-4 rounded-full font-bold shadow-2xl">🖨️
+                        class="no-print mb-8 bg-slate-800 text-white px-10 py-4 rounded-full font-bold shadow-xl">🖨️
                         พิมพ์เอกสารสรุปเวลาเรียน</button>
                     <div id="att-summary-container"
-                        class="a4-landscape shadow-2xl border p-12 bg-white mx-auto rounded-[3rem] text-left"></div>
+                        class="a4-landscape shadow-xl border p-12 bg-white mx-auto rounded-[1rem] text-left"></div>
                 </div>
 
                 <div id="tab-dashboard" class="tab-content active">
                     <div
-                        class="bg-gradient-to-br from-indigo-700 to-blue-800 p-10 rounded-[3rem] text-white shadow-2xl mb-10 text-center md:text-left">
-                        <h2 id="header-grade" class="text-sm font-bold opacity-70 mb-2 uppercase tracking-widest">ชั้น -
-                        </h2>
-                        <h1 id="header-subject" class="text-5xl font-black mb-2">-</h1>
-                        <p id="header-code" class="text-xl opacity-90 font-bold"></p>
+                        class="bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-sm mb-10 flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+                        <div>
+                            <h2 id="header-grade"
+                                class="text-indigo-500 font-bold uppercase tracking-widest text-sm mb-2">-</h2>
+                            <h1 id="header-subject" class="text-5xl font-black text-slate-800 mb-2">-</h1>
+                            <p id="header-code" class="text-xl text-slate-400 font-medium"></p>
+                        </div>
+                        <div class="mt-6 md:mt-0 flex gap-6">
+                            <div class="text-center bg-slate-50 p-6 rounded-3xl w-32 border border-slate-100">
+                                <p class="text-slate-400 text-xs font-bold mb-1 uppercase">นักเรียน</p>
+                                <p id="dash-count" class="text-3xl font-black text-slate-800">0</p>
+                            </div>
+                            <div class="text-center bg-indigo-50 p-6 rounded-3xl w-32 border border-indigo-100">
+                                <p class="text-indigo-400 text-xs font-bold mb-1 uppercase">เกรดเฉลี่ย</p>
+                                <p id="dash-avg" class="text-3xl font-black text-indigo-600">0.0</p>
+                            </div>
+                            <div class="text-center bg-emerald-50 p-6 rounded-3xl w-32 border border-emerald-100">
+                                <p class="text-emerald-400 text-xs font-bold mb-1 uppercase">มาเรียน</p>
+                                <p id="dash-att" class="text-3xl font-black text-emerald-500">0%</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-8 mb-10 text-center font-bold">
-                        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-white">
-                            <h4 class="text-slate-400 text-xs mb-2">นักเรียน</h4>
-                            <p id="dash-count" class="text-5xl">0</p>
-                        </div>
-                        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-white">
-                            <h4 class="text-slate-400 text-xs mb-2">เกรดเฉลี่ย</h4>
-                            <p id="dash-avg" class="text-5xl text-emerald-600">0.00</p>
-                        </div>
-                        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-white">
-                            <h4 class="text-slate-400 text-xs mb-2">มาวันนี้</h4>
-                            <p id="dash-att" class="text-5xl text-blue-600">0%</p>
-                        </div>
-                    </div>
-                    <div class="bg-white p-10 rounded-[3rem] shadow-xl border border-white h-96"><canvas
+                    <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 h-96"><canvas
                             id="gradeChart"></canvas></div>
                 </div>
 
                 <div id="tab-scores" class="tab-content">
-                    <div class="bg-white rounded-[3rem] shadow-2xl border overflow-hidden text-center font-bold">
-                        <div class="p-8 bg-slate-900 text-white flex justify-between items-center">
-                            <h3 class="text-lg font-black text-indigo-400 uppercase">บันทึกคะแนนรายวิชา</h3><button
+                    <div
+                        class="bg-white rounded-[3.5rem] shadow-sm border border-slate-100 overflow-hidden text-center font-bold">
+                        <div class="p-8 bg-white border-b border-slate-100 flex justify-between items-center">
+                            <h3 class="text-xl font-black text-slate-800 uppercase">บันทึกคะแนนรายวิชา</h3><button
                                 onclick="openBulk()"
-                                class="bg-indigo-600 px-8 py-3 rounded-2xl text-xs font-black shadow-lg">+
-                                นำชื่อเข้า</button>
+                                class="bg-slate-100 text-slate-600 px-8 py-3 rounded-2xl text-xs font-black hover:bg-slate-800 hover:text-white transition-all">+
+                                นำรายชื่อเข้า</button>
                         </div>
                         <table class="w-full text-center font-bold text-2xl">
-                            <thead class="bg-slate-50 text-slate-400 text-xs font-black">
+                            <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
                                 <tr>
-                                    <th class="p-6">ที่</th>
+                                    <th class="p-6 w-16">ที่</th>
                                     <th class="text-left">ชื่อ-นามสกุล</th>
                                     <th>เก็บ</th>
                                     <th>กลาง</th>
@@ -223,51 +275,56 @@
                                     <th></th>
                                 </tr>
                             </thead>
-                            <tbody id="score-body" class="divide-y"></tbody>
+                            <tbody id="score-body" class="divide-y text-slate-700"></tbody>
                         </table>
                     </div>
                 </div>
 
                 <div id="tab-qr-cards" class="tab-content text-center">
                     <button onclick="window.print()"
-                        class="no-print mb-10 bg-slate-900 text-white px-14 py-4 rounded-full font-black shadow-2xl">พิมพ์บัตร
+                        class="no-print mb-10 bg-slate-800 text-white px-14 py-4 rounded-full font-black shadow-xl">พิมพ์บัตร
                         QR ทั้งหมด</button>
                     <div id="qr-cards-container" class="grid grid-cols-1 md:grid-cols-4 gap-8"></div>
                 </div>
 
                 <div id="tab-class-report" class="tab-content text-center">
                     <div id="class-report-container"
-                        class="a4-landscape shadow-2xl border p-12 bg-white mx-auto rounded-[3rem] text-left"></div>
+                        class="a4-landscape shadow-xl border p-12 bg-white mx-auto rounded-[1rem] text-left"></div>
                 </div>
             </div>
         </main>
     </div>
 
     <div id="classModal"
-        class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4">
-        <div class="bg-white rounded-[3rem] p-10 w-full max-w-lg shadow-3xl text-center">
-            <h3 class="text-2xl font-black mb-6 text-slate-800 uppercase italic">✨ เพิ่มวิชาใหม่</h3>
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden z-[110] flex items-center justify-center p-4">
+        <div class="bg-white rounded-[3rem] p-10 w-full max-w-lg shadow-2xl text-center border border-slate-100">
+            <h3 class="text-2xl font-black mb-6 text-slate-800 italic uppercase tracking-tighter">✨ เพิ่มวิชาใหม่</h3>
             <div class="space-y-4 text-left font-bold"><input type="text" id="new-grade"
-                    class="w-full border-2 rounded-2xl p-4 outline-none focus:border-indigo-500"
+                    class="w-full border border-slate-200 bg-slate-50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
                     placeholder="ชั้น (เช่น ป.4)"><input type="text" id="new-code"
-                    class="w-full border-2 rounded-2xl p-4 outline-none focus:border-indigo-500"
+                    class="w-full border border-slate-200 bg-slate-50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
                     placeholder="รหัสวิชา (เช่น ท14101)"><input type="text" id="new-name"
-                    class="w-full border-2 rounded-2xl p-4 outline-none focus:border-indigo-500"
+                    class="w-full border border-slate-200 bg-slate-50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
                     placeholder="วิชา (เช่น ภาษาไทย)"></div>
             <div class="mt-8 flex justify-end space-x-3"><button onclick="closeClassModal()"
                     class="text-slate-400 font-bold px-6">ยกเลิก</button><button onclick="saveNewClass()"
-                    class="bg-indigo-600 text-white px-10 py-3 rounded-2xl font-black">💾 บันทึก</button></div>
+                    class="bg-indigo-600 text-white px-10 py-3 rounded-2xl font-black shadow-lg">💾 บันทึก</button>
+            </div>
         </div>
     </div>
 
-    <div id="bulkModal" class="fixed inset-0 bg-black/70 hidden z-[100] flex items-center justify-center p-4 no-print">
-        <div class="bg-white rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl text-center font-bold">
-            <h3 class="text-xl font-bold mb-4">นำรายชื่อเข้าห้อง</h3><textarea id="bulkInput" rows="10"
-                class="w-full border-2 rounded-2xl p-5 outline-none focus:border-indigo-500"
-                placeholder="เลขที่ ชื่อ-นามสกุล (เช่น 101 นายสมชาย ใจดี)"></textarea>
-            <div class="mt-6 flex justify-end space-x-3"><button onclick="closeBulk()"
+    <div id="bulkModal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden z-[100] flex items-center justify-center p-4 no-print">
+        <div
+            class="bg-white rounded-[3rem] p-12 w-full max-w-lg shadow-2xl text-center font-bold border border-slate-100">
+            <h3 class="text-xl font-bold mb-6">นำรายชื่อเข้าห้อง</h3>
+            <p class="text-[10px] text-slate-400 mb-4 italic text-center">รูปแบบ: [รหัสประจำตัว][ช่องว่าง][ชื่อ-นามสกุล]
+            </p><textarea id="bulkInput" rows="10"
+                class="w-full border border-slate-200 bg-slate-50 rounded-2xl p-6 outline-none focus:border-indigo-400 transition-all font-mono text-sm"
+                placeholder="101 นายสมชาย ใจดี&#10;102 นางสาวสุดา มาเรียน"></textarea>
+            <div class="mt-8 flex justify-end space-x-3"><button onclick="closeBulk()"
                     class="text-slate-400 font-bold px-6">ยกเลิก</button><button onclick="doBulk()"
-                    class="bg-indigo-600 text-white px-8 py-2 rounded-2xl font-bold shadow-lg">ยืนยัน</button></div>
+                    class="bg-indigo-600 text-white px-8 py-2 rounded-2xl font-black shadow-lg">ยืนยัน</button></div>
         </div>
     </div>
 
@@ -284,13 +341,13 @@
             if (data) {
                 classes = data;
                 const uniqueGrades = [...new Set(classes.map(c => c.grade_level))];
-                document.getElementById('gradeSelector').innerHTML = '<option value="">ระดับชั้น</option>' + uniqueGrades.map(g => `<option value="${g}">${g}</option>`).join('');
+                document.getElementById('gradeSelector').innerHTML = '<option value="">ชั้นเรียน</option>' + uniqueGrades.map(g => `<option value="${g}">${g}</option>`).join('');
             }
         }
 
         function filterSubjects(grade) {
             const filtered = classes.filter(c => c.grade_level === grade);
-            document.getElementById('subjectSelector').innerHTML = '<option value="">เลือกรายวิชา</option>' + filtered.map(s => `<option value="${s.id}">${s.subject_name}</option>`).join('');
+            document.getElementById('subjectSelector').innerHTML = '<option value="">รายวิชา</option>' + filtered.map(s => `<option value="${s.id}">${s.subject_name}</option>`).join('');
         }
 
         async function changeActiveSubject(id) {
@@ -317,7 +374,7 @@
             document.getElementById('manual-list').innerHTML = students.map(s => {
                 const record = s.attendance.find(a => a.check_date === date && a.subject_name === activeSubj.subject_name);
                 const status = record ? record.status : "";
-                return `<div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl font-bold"><span>${s.name}</span><div class="flex space-x-1"><button onclick="setAtt('${s.id}','P')" class="btn-status ${status === 'P' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-white text-slate-300'}">มา</button><button onclick="setAtt('${s.id}','A')" class="btn-status ${status === 'A' ? 'bg-red-500 text-white shadow-lg' : 'bg-white text-slate-300'}">ขาด</button><button onclick="setAtt('${s.id}','L')" class="btn-status ${status === 'L' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-slate-300'}">ลา</button></div></div>`;
+                return `<div class="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-3xl font-bold shadow-sm transition hover:border-indigo-200"><span>${s.name}</span><div class="flex space-x-1"><button onclick="setAtt('${s.id}','P')" class="btn-status ${status === 'P' ? 'bg-emerald-500 text-white shadow-lg border-emerald-500' : 'bg-slate-50 text-slate-300'}">มา</button><button onclick="setAtt('${s.id}','A')" class="btn-status ${status === 'A' ? 'bg-red-500 text-white shadow-lg border-red-500' : 'bg-white text-slate-300'}">ขาด</button><button onclick="setAtt('${s.id}','L')" class="btn-status ${status === 'L' ? 'bg-amber-500 text-white shadow-lg border-amber-500' : 'bg-white text-slate-300'}">ลา</button></div></div>`;
             }).join('');
         }
 
@@ -338,12 +395,12 @@
 
         function renderAttendanceSummaryReport() {
             const con = document.getElementById('att-summary-container');
-            let html = `<div class="text-center mb-10"><h1 class="text-4xl font-black uppercase tracking-tighter text-slate-900 mb-2">เอกสารสรุปสถิติการมาเรียน</h1><p class="text-2xl font-bold text-indigo-600 tracking-wide">วิชา: ${activeSubj.subject_name} | ชั้น: ${activeSubj.grade_level}</p><p class="text-slate-400 font-bold mt-2 italic">สะสม ณ วันที่ ${new Date().toLocaleDateString('th-TH')}</p></div><table class="w-full text-center border-collapse border-4 border-slate-900 text-lg font-bold"><thead><tr class="bg-slate-100"><th class="border-4 border-slate-900 p-4 w-16">ที่</th><th class="border-4 border-slate-900 p-4 text-left">ชื่อ-นามสกุล</th><th class="border-4 border-slate-900 p-4 w-28 text-emerald-600">มา</th><th class="border-4 border-slate-900 p-4 w-28 text-red-600">ขาด</th><th class="border-4 border-slate-900 p-4 w-28 text-amber-600">ลา</th><th class="border-4 border-slate-900 p-4 w-32 bg-indigo-50 text-indigo-700">ร้อยละ</th></tr></thead><tbody>`;
+            let html = `<div class="text-center mb-10"><h1 class="text-4xl font-black uppercase tracking-tighter text-slate-900 mb-2">เอกสารสรุปสถิติการมาเรียน</h1><p class="text-2xl font-bold text-indigo-600 tracking-wide">วิชา: ${activeSubj.subject_name} (${activeSubj.subject_code}) | ชั้น: ${activeSubj.grade_level}</p><p class="text-slate-400 font-bold mt-2 italic">สะสม ณ วันที่ ${new Date().toLocaleDateString('th-TH')}</p></div><table class="w-full text-center border-collapse border-4 border-slate-900 text-lg font-bold"><thead><tr class="bg-slate-100"><th class="border-4 border-slate-900 p-4 w-16">ที่</th><th class="border-4 border-slate-900 p-4 text-left">ชื่อ-นามสกุล</th><th class="border-4 border-slate-900 p-4 w-28 text-emerald-600">มา</th><th class="border-4 border-slate-900 p-4 w-28 text-red-600">ขาด</th><th class="border-4 border-slate-900 p-4 w-28 text-amber-600">ลา</th><th class="border-4 border-slate-900 p-4 w-32 bg-indigo-50 text-indigo-700">ร้อยละ</th></tr></thead><tbody>`;
             students.forEach(s => {
                 const atts = s.attendance.filter(a => a.subject_name === activeSubj.subject_name);
                 const p = atts.filter(a => a.status === 'P').length, a = atts.filter(a => a.status === 'A').length, l = atts.filter(a => a.status === 'L').length;
                 const total = p + a + l; const pct = total > 0 ? ((p / total) * 100).toFixed(0) : 0;
-                html += `<tr><td class="border-4 border-slate-900 p-3">${s.roll_number}</td><td class="border-4 border-slate-900 p-3 text-left font-bold text-slate-800">${s.name}</td><td class="border-4 border-slate-900 p-3">${p}</td><td class="border-4 border-slate-900 p-3">${a}</td><td class="border-4 border-slate-900 p-3">${l}</td><td class="border-4 border-slate-900 p-3 font-black text-2xl">${pct}%</td></tr>`;
+                html += `<tr><td class="border-4 border-slate-900 p-3 text-center">${s.roll_number}</td><td class="border-4 border-slate-900 p-3 text-left font-bold text-slate-800">${s.name}</td><td class="border-4 border-slate-900 p-3 text-center">${p}</td><td class="border-4 border-slate-900 p-3 text-center">${a}</td><td class="border-4 border-slate-900 p-3 text-center">${l}</td><td class="border-4 border-slate-900 p-3 font-black text-2xl text-center">${pct}%</td></tr>`;
             });
             html += `</tbody></table><div class="mt-20 flex justify-between font-black italic px-10"><div class="text-center"><p class="mb-14 text-slate-300">ลงชื่อ.........................................</p><p>( หัวหน้าฝ่ายทะเบียน )</p></div><div class="text-center"><p class="mb-14 text-slate-300">ลงชื่อ.........................................</p><p>( ครูผู้สอน: ${activeSubj.subject_name} )</p></div></div>`;
             con.innerHTML = html;
@@ -354,12 +411,7 @@
             let currentRoll = 1;
             for (const l of input) {
                 const p = l.split(/\s+/); if (p.length < 2) continue;
-                await _sb.from('students').insert({
-                    std_id: p[0],
-                    name: p.slice(1).join(" "),
-                    class_name: activeSubj.grade_level,
-                    roll_number: currentRoll
-                });
+                await _sb.from('students').insert({ std_id: p[0], name: p.slice(1).join(" "), class_name: activeSubj.grade_level, roll_number: currentRoll });
                 currentRoll++;
             }
             location.reload();
@@ -367,7 +419,12 @@
 
         function switchTab(id) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link-modern').forEach(el => el.classList.remove('active-tab'));
+
             document.getElementById('tab-' + id).classList.add('active');
+            const navBtn = document.getElementById('nav-' + id);
+            if (navBtn) navBtn.classList.add('active-tab');
+
             if (id === 'attendance') setAttMode('scanner'); else stopScanner();
             if (id === 'qr-cards') renderQRCards();
             if (id === 'class-report') renderClassSummary();
@@ -393,14 +450,13 @@
                         loadData();
                     });
                 }
-            }).catch(err => { alert("ไม่สามารถเข้าถึงกล้องได้: " + err); });
+            }).catch(err => { console.error(err); });
         }
 
-        // [ฟังก์ชันอื่นๆ: renderScores, upSc, renderDashboard, renderQRCards, renderClassSummary, saveNewClass, delStd ใช้โค้ดเดิมที่เสถียรแล้ว]
         function renderScores() {
             document.getElementById('score-body').innerHTML = students.map(s => {
                 const sc = s.scores.find(x => x.subject_name === activeSubj.subject_name) || { collect_score: 0, midterm_score: 0, final_score: 0 };
-                return `<tr><td class="p-6 text-slate-300 font-bold text-center">${s.roll_number}</td><td class="text-left font-bold text-slate-800">${s.name}</td><td class="text-center"><input type="number" onchange="upSc('${s.id}','collect',this.value)" value="${sc.collect_score}" class="w-20 text-center bg-slate-50 rounded-xl p-3 border-none ring-1 ring-slate-200"></td><td class="text-center"><input type="number" onchange="upSc('${s.id}','midterm',this.value)" value="${sc.midterm_score}" class="w-20 text-center bg-slate-50 rounded-xl p-3 border-none ring-1 ring-slate-200"></td><td class="text-center"><input type="number" onchange="upSc('${s.id}','final',this.value)" value="${sc.final_score}" class="w-20 text-center bg-slate-50 rounded-xl p-3 border-none ring-1 ring-slate-200"></td><td class="p-6 font-black text-indigo-700 bg-indigo-50/50 text-center">${sc.collect_score + sc.midterm_score + sc.final_score}</td><td class="text-center"><button onclick="delStd('${s.id}')" class="text-red-300 font-bold hover:text-red-500 transition">ลบ</button></td></tr>`;
+                return `<tr><td class="p-6 text-slate-300 font-bold text-center">${s.roll_number}</td><td class="text-left font-bold text-slate-800">${s.name}</td><td class="text-center"><input type="number" onchange="upSc('${s.id}','collect',this.value)" value="${sc.collect_score}" class="w-20 text-center bg-slate-50 rounded-xl p-3 border-none ring-1 ring-slate-200 outline-none"></td><td class="text-center"><input type="number" onchange="upSc('${s.id}','midterm',this.value)" value="${sc.midterm_score}" class="w-20 text-center bg-slate-50 rounded-xl p-3 border-none ring-1 ring-slate-200 outline-none"></td><td class="text-center"><input type="number" onchange="upSc('${s.id}','final',this.value)" value="${sc.final_score}" class="w-20 text-center bg-slate-50 rounded-xl p-3 border-none ring-1 ring-slate-200 outline-none"></td><td class="p-6 font-black text-indigo-700 bg-indigo-50/50 text-center">${sc.collect_score + sc.midterm_score + sc.final_score}</td><td class="text-center"><button onclick="delStd('${s.id}')" class="text-red-300 font-bold hover:text-red-500 transition">ลบ</button></td></tr>`;
             }).join('');
         }
 
@@ -419,7 +475,7 @@
                 let g = 0; if (t >= 80) g = 4; else if (t >= 75) g = 3.5; else if (t >= 70) g = 3; else if (t >= 65) g = 2.5; else if (t >= 60) g = 2; else if (t >= 55) g = 1.5; else if (t >= 50) g = 1;
                 counts[g]++; totalG += g;
             });
-            document.getElementById('dash-avg').innerText = students.length ? (totalG / students.length).toFixed(2) : "0.00";
+            document.getElementById('dash-avg').innerText = students.length ? (totalG / students.length).toFixed(1) : "0.0";
             const date = document.getElementById('global-att-date').value;
             const pres = students.filter(s => s.attendance.some(a => a.check_date === date && a.status === 'P' && a.subject_name === activeSubj.subject_name)).length;
             document.getElementById('dash-att').innerText = students.length ? ((pres / students.length) * 100).toFixed(0) + "%" : "0%";
@@ -430,20 +486,20 @@
         function renderQRCards() {
             const con = document.getElementById('qr-cards-container'); con.innerHTML = "";
             students.forEach(s => {
-                const card = document.createElement('div'); card.className = "bg-white p-8 rounded-[2.5rem] shadow-xl text-center qr-card-print space-y-4";
-                card.innerHTML = `<p class="text-xs font-black text-indigo-500 uppercase">เลขที่ ${s.roll_number}</p><div id="qr-${s.id}" class="flex justify-center p-3 bg-slate-50 rounded-3xl"></div><p class="text-xl font-bold text-slate-800">${s.name}</p>`;
+                const card = document.createElement('div'); card.className = "bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 text-center qr-card-print space-y-4";
+                card.innerHTML = `<p class="text-[10px] font-black text-indigo-500 uppercase">เลขที่ ${s.roll_number}</p><div id="qr-${s.id}" class="flex justify-center p-2"></div><p class="text-lg font-bold text-slate-800">${s.name}</p>`;
                 con.appendChild(card); new QRCode(document.getElementById(`qr-${s.id}`), { text: s.std_id, width: 140, height: 140 });
             });
         }
 
         function renderClassSummary() {
             const con = document.getElementById('class-report-container');
-            let html = `<div class="text-center mb-12"><h1 class="text-4xl font-black mb-4 uppercase tracking-tighter text-slate-900">รายงานสรุปรายวิชา</h1><p class="text-2xl font-bold text-indigo-600">${activeSubj.subject_name} | ชั้น: ${activeSubj.grade_level}</p></div><table class="w-full text-center border-collapse border-4 border-slate-900 text-lg font-bold"><thead><tr class="bg-slate-100"><th class="border-4 border-slate-900 p-4 w-16">ที่</th><th class="border-4 border-slate-900 p-4 text-left">ชื่อ-นามสกุล</th><th class="border-4 border-slate-900 p-4">คะแนน</th><th class="border-4 border-slate-900 p-4">เกรด</th><th class="border-4 border-slate-900 p-4">มาเรียน %</th></tr></thead><tbody>`;
+            let html = `<div class="text-center mb-12"><h1 class="text-3xl font-black text-slate-900 mb-2">รายงานสรุปผลการเรียน</h1><p class="text-xl font-bold text-slate-500">วิชา: ${activeSubj.subject_name} | ชั้น: ${activeSubj.grade_level}</p></div><table class="w-full text-center border-collapse border-4 border-slate-900 text-lg font-bold"><thead><tr class="bg-slate-50"><th class="border-4 border-slate-900 p-4 w-16">ที่</th><th class="border-4 border-slate-900 p-4 text-left">ชื่อ-นามสกุล</th><th class="border-4 border-slate-900 p-4">คะแนน</th><th class="border-4 border-slate-900 p-4">เกรด</th><th class="border-4 border-slate-900 p-4">มาเรียน %</th></tr></thead><tbody>`;
             students.forEach(s => {
                 const sc = s.scores.find(x => x.subject_name === activeSubj.subject_name) || { collect_score: 0, midterm_score: 0, final_score: 0 }; const t = sc.collect_score + sc.midterm_score + sc.final_score;
                 let g = 0; if (t >= 80) g = 4; else if (t >= 75) g = 3.5; else if (t >= 70) g = 3; else if (t >= 65) g = 2.5; else if (t >= 60) g = 2; else if (t >= 55) g = 1.5; else if (t >= 50) g = 1;
                 const atts = s.attendance.filter(a => a.subject_name === activeSubj.subject_name); const p = atts.filter(a => a.status === 'P').length, total = atts.length; const pct = total > 0 ? ((p / total) * 100).toFixed(0) : 0;
-                html += `<tr><td class="border-4 border-slate-900 p-3 text-center">${s.roll_number}</td><td class="border-4 border-slate-900 p-3 text-left font-bold text-slate-800">${s.name}</td><td class="border-4 border-slate-900 p-3 font-black text-indigo-700 text-2xl">${t}</td><td class="border-4 border-slate-900 p-3 text-3xl font-black text-center">${g}</td><td class="border-4 border-slate-900 p-3 font-black text-center">${pct}%</td></tr>`;
+                html += `<tr><td class="border-4 border-slate-900 p-3 text-center">${s.roll_number}</td><td class="border-4 border-slate-900 p-3 text-left font-bold text-slate-800">${s.name}</td><td class="border-4 border-slate-900 p-3 font-black text-indigo-700 text-2xl text-center">${t}</td><td class="border-4 border-slate-900 p-3 text-3xl font-black text-center">${g}</td><td class="border-4 border-slate-900 p-3 font-black text-center">${pct}%</td></tr>`;
             });
             html += `</tbody></table><div class="mt-20 flex justify-between font-black italic"><span>ลงชื่อ......................................... (ครูผู้สอน)</span><span>วันที่: ${new Date().toLocaleDateString('th-TH')}</span></div>`;
             con.innerHTML = html;
