@@ -462,14 +462,31 @@
         function startScanner() {
             if (!scanner) scanner = new Html5Qrcode("reader");
             const date = document.getElementById('global-att-date').value;
-            scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (text) => {
-                const std = students.find(s => s.std_id === text.trim());
-                if (std) {
-                    _sb.from('attendance').upsert({ student_id: std.id, check_date: date, status: 'P', subject_name: activeSubj.subject_name }, { onConflict: 'student_id, check_date, subject_name' }).then(() => {
-                        if (navigator.vibrate) navigator.vibrate(100);
-                        loadData();
-                    });
+
+            // ตั้งค่า config ให้รองรับทั้ง iOS และ Android ได้ดีขึ้น
+            const config = { fps: 20, qrbox: 250 };
+
+            scanner.start(
+                { facingMode: "environment" }, // พยายามเรียกใช้กล้องหลัง
+                config,
+                (text) => {
+                    const std = students.find(s => s.std_id === text.trim());
+                    if (std) {
+                        _sb.from('attendance').upsert({
+                            student_id: std.id,
+                            check_date: date,
+                            status: 'P',
+                            subject_name: activeSubj.subject_name
+                        }, { onConflict: 'student_id, check_date, subject_name' }).then(() => {
+                            if (navigator.vibrate) navigator.vibrate(100);
+                            loadData();
+                        });
+                    }
                 }
+            ).catch(err => {
+                // หากเปิดกล้องหลังไม่ได้ ให้ลองเปิดกล้องเริ่มต้น (Default) แทน
+                console.error("ไม่สามารถเปิดกล้องหลังได้:", err);
+                alert("ไม่สามารถเข้าถึงกล้องได้: " + err);
             });
         }
 
