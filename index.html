@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบ ปพ.5 Digital Cloud Standard v15.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .a4-page {
+                width: 210mm;
+                min-height: 290mm;
+                padding: 20mm;
+                margin: 0 auto;
+                page-break-after: always;
+                display: flex;
+                flex-direction: column;
+                background: white;
+                border: none;
+            }
+
+            /* สไตล์สำหรับรายงานรวมแนวนอน */
+            .a4-landscape {
+                width: 297mm;
+                min-height: 210mm;
+                padding: 10mm;
+                margin: 0 auto;
+                background: white;
+                border: none;
+            }
+
+            .qr-card-print {
+                width: 6.5cm;
+                height: 9.5cm;
+                border: 1px solid #ddd;
+                margin: 5px;
+                float: left;
+                padding: 10px;
+                break-inside: avoid;
+            }
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            border: 4px solid #4f46e5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <nav class="bg-slate-900 text-white shadow-2xl no-print sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <span class="text-xl font-bold text-indigo-400">🏫 TEACHER HUB</span>
+                    <select id="classSelector" onchange="changeClass(this.value)"
+                        class="bg-slate-800 border-none rounded text-xs px-2 py-1 outline-none"></select>
+                    <button onclick="addNewClass()"
+                        class="text-[10px] bg-slate-700 hover:bg-indigo-600 px-2 py-1 rounded transition">+
+                        เพิ่มห้อง</button>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="switchTab('dashboard')" class="text-xs hover:text-indigo-300">ภาพรวม</button>
+                    <button onclick="switchTab('attendance')" class="text-xs hover:text-indigo-300">เช็คชื่อ</button>
+                    <button onclick="switchTab('scores')" class="text-xs hover:text-indigo-300">จัดการคะแนน</button>
+                    <button onclick="switchTab('report')" class="text-xs hover:text-indigo-300">ใบเกรดเดี่ยว</button>
+                    <button onclick="switchTab('class-report')"
+                        class="text-xs bg-indigo-600 px-3 py-1 rounded-full text-white transition hover:bg-indigo-500">รายงานห้องเรียน</button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto p-4 md:p-8">
+            <div id="status-screen" class="text-center py-20">
+                <div id="status-icon" class="text-4xl mb-4 animate-bounce">🔄</div>
+                <div id="status-text" class="text-slate-400 font-bold">กำลังเชื่อมต่อฐานข้อมูล Cloud...</div>
+                <div id="setup-btn" class="hidden mt-6">
+                    <button onclick="addNewClass()"
+                        class="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg">สร้างห้องเรียนแรก</button>
+                </div>
+            </div>
+
+            <div id="main-ui" class="hidden">
+                <div id="tab-dashboard" class="tab-content active">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 text-center">
+                        <div class="bg-white p-6 rounded-3xl border shadow-sm">
+                            <h4 class="text-slate-400 text-[10px] font-bold tracking-widest uppercase">รายวิชา</h4>
+                            <p id="dash-subj" class="text-lg font-bold truncate">-</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-3xl border shadow-sm">
+                            <h4 class="text-slate-400 text-[10px] font-bold tracking-widest uppercase">นักเรียน</h4>
+                            <p id="dash-count" class="text-3xl font-black">0</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-3xl border shadow-sm">
+                            <h4 class="text-slate-400 text-[10px] font-bold tracking-widest uppercase">เกรดเฉลี่ย</h4>
+                            <p id="dash-avg" class="text-3xl font-black text-emerald-600">0.00</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-3xl border shadow-sm">
+                            <h4 class="text-slate-400 text-[10px] font-bold tracking-widest uppercase">มาวันนี้</h4>
+                            <p id="dash-att-today" class="text-3xl font-black text-blue-600">0%</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border shadow-sm"><canvas id="gradeChart"
+                            class="max-h-64"></canvas></div>
+                </div>
+
+                <div id="tab-attendance" class="tab-content">
+                    <div class="flex flex-col lg:flex-row gap-8">
+                        <div class="w-full lg:w-1/3 space-y-4">
+                            <div class="bg-white p-4 rounded-3xl border flex p-1 shadow-sm">
+                                <button onclick="setAttMode('scanner')" id="btn-mode-scanner"
+                                    class="flex-1 py-2 rounded-2xl text-xs font-bold bg-indigo-600 text-white shadow-md transition">📷
+                                    สแกน</button>
+                                <button onclick="setAttMode('manual')" id="btn-mode-manual"
+                                    class="flex-1 py-2 rounded-2xl text-xs font-bold text-slate-400 transition">📝
+                                    ติ๊กรายชื่อ</button>
+                            </div>
+                            <div id="area-scanner" class="bg-white p-6 rounded-3xl border text-center shadow-sm">
+                                <div id="reader"></div>
+                            </div>
+                            <div id="area-manual" class="hidden bg-white p-6 rounded-3xl border shadow-sm">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="font-bold text-sm text-slate-600">เช็คชื่อรายวัน</h3><input type="date"
+                                        id="att-date" onchange="renderAttendance()" class="text-xs border rounded p-1">
+                                </div>
+                                <div id="manual-list" class="space-y-2 max-h-[400px] overflow-y-auto pr-2"></div>
+                            </div>
+                        </div>
+                        <div class="w-full lg:w-2/3 bg-white p-6 rounded-3xl border shadow-sm overflow-x-auto">
+                            <h3 class="font-bold mb-4 text-slate-600 text-sm">สถิติการมาเรียนสะสม</h3>
+                            <table class="w-full text-xs text-center">
+                                <thead class="bg-slate-50 border-b text-slate-400 uppercase">
+                                    <tr>
+                                        <th class="p-3 text-left">รหัส</th>
+                                        <th class="p-3 text-left">ชื่อ-นามสกุล</th>
+                                        <th class="p-3">มา</th>
+                                        <th class="p-3">ขาด</th>
+                                        <th class="p-3">ลา</th>
+                                        <th class="p-3 font-bold">% สะสม</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="att-stats-body" class="divide-y"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-scores" class="tab-content">
+                    <div class="p-5 bg-slate-900 text-white flex justify-between items-center rounded-t-3xl shadow-lg">
+                        <h3 class="font-bold text-sm">จัดการข้อมูลและคะแนน</h3><button onclick="openBulk()"
+                            class="bg-indigo-600 px-4 py-1 rounded-full text-[10px] font-bold shadow-lg transition hover:bg-indigo-500">+
+                            เพิ่มจาก Excel</button>
+                    </div>
+                    <div class="bg-white border rounded-b-3xl overflow-x-auto shadow-sm">
+                        <table class="w-full text-xs text-center">
+                            <thead class="bg-slate-50 border-b text-slate-400">
+                                <tr>
+                                    <th class="p-4 w-12 text-center">ที่</th>
+                                    <th class="p-4">รหัส</th>
+                                    <th class="p-4 text-left">ชื่อ-นามสกุล</th>
+                                    <th class="p-4">เก็บ</th>
+                                    <th class="p-4">กลาง</th>
+                                    <th class="p-4">ปลาย</th>
+                                    <th class="p-4 bg-indigo-50 font-black text-indigo-700">รวม</th>
+                                    <th class="p-4">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="score-body" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="tab-report" class="tab-content text-center">
+                    <button onclick="window.print()"
+                        class="no-print mb-8 bg-slate-900 text-white px-10 py-3 rounded-full font-bold shadow-2xl">พิมพ์ใบเกรดทั้งหมด</button>
+                    <div id="report-container"></div>
+                </div>
+
+                <div id="tab-class-report" class="tab-content text-center">
+                    <button onclick="window.print()"
+                        class="no-print mb-8 bg-slate-900 text-white px-10 py-3 rounded-full font-bold shadow-2xl uppercase tracking-widest">พิมพ์รายงานทั้งห้องเรียน
+                        (A4 แนวนอน)</button>
+                    <div id="class-report-container"
+                        class="a4-landscape shadow-2xl border p-12 bg-white mx-auto rounded-3xl">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="bulkModal" class="fixed inset-0 bg-black/70 hidden z-[100] flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl">
+            <h3 class="text-xl font-bold mb-4">นำเข้ารายชื่อ</h3>
+            <textarea id="bulkInput" rows="10"
+                class="w-full border-2 rounded-3xl p-5 text-xs font-mono outline-none focus:border-indigo-500"
+                placeholder="4874 นายสมชาย ดีมาก"></textarea>
+            <div class="mt-6 flex justify-end space-x-3"><button onclick="closeBulk()"
+                    class="text-slate-400 font-bold">ยกเลิก</button><button onclick="doBulk()" id="btn-confirm-bulk"
+                    class="bg-indigo-600 text-white px-8 py-2 rounded-2xl font-bold shadow-lg">ยืนยันนำเข้า</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- SUPABASE CONFIG ---
+        const SB_URL = 'https://wfzyxmtvjprzsbyfgvtm.supabase.co';
+        const SB_KEY = 'sb_publishable_1OVpNTSCOAYhFGa_aHvtxA_qSUY_Ni8';
+        const _sb = supabase.createClient(SB_URL, SB_KEY);
+
+        let currentClass = null; let students = []; let classes = []; let scanner = null;
+
+        async function init() {
+            try {
+                const { data, error } = await _sb.from('classes').select('*');
+                if (data && data.length > 0) {
+                    classes = data;
+                    document.getElementById('classSelector').innerHTML = classes.map(c => `<option value="${c.grade_level}">${c.grade_level}</option>`).join('');
+                    currentClass = classes[0]; await loadClassData();
+                } else {
+                    document.getElementById('setup-btn').classList.remove('hidden');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadClassData() {
+            if (!currentClass) return;
+            const { data: stds, error } = await _sb.from('students').select('*, scores(*), attendance(*)').eq('class_name', currentClass.grade_level).order('roll_number', { ascending: true });
+            if (error) { console.error(error); return; }
+            students = stds || [];
+            document.getElementById('status-screen').classList.add('hidden');
+            document.getElementById('main-ui').classList.remove('hidden');
+            updDash(); renderAttendance(); renderStats();
+        }
+
+        async function changeClass(val) {
+            currentClass = classes.find(c => c.grade_level === val);
+            await loadClassData(); // โหลดข้อมูลใหม่เมื่อเปลี่ยนห้อง
+        }
+
+        // --- ATTENDANCE SYSTEM (เพิ่มปุ่ม ลา) ---
+        function renderAttendance() {
+            const date = document.getElementById('att-date').value || new Date().toISOString().split('T')[0];
+            document.getElementById('att-date').value = date;
+            const listContainer = document.getElementById('manual-list');
+            if (students.length === 0) { listContainer.innerHTML = '<p class="text-center py-10">ไม่มีรายชื่อ</p>'; return; }
+            listContainer.innerHTML = students.map(s => {
+                const record = s.attendance.find(a => a.check_date === date);
+                const status = record ? record.status : "";
+                return `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl text-[10px] hover:bg-indigo-50 transition border border-slate-100">
+                    <span class="font-bold text-slate-700 truncate w-32">${s.name}</span>
+                    <div class="flex space-x-1">
+                        <button onclick="setAttHand('${s.id}', 'P')" class="px-3 py-1 rounded-lg font-bold transition ${status === 'P' ? 'bg-emerald-500 text-white shadow-md' : 'bg-white border text-slate-300'}">มา</button>
+                        <button onclick="setAttHand('${s.id}', 'A')" class="px-3 py-1 rounded-lg font-bold transition ${status === 'A' ? 'bg-red-500 text-white shadow-md' : 'bg-white border text-slate-300'}">ขาด</button>
+                        <button onclick="setAttHand('${s.id}', 'L')" class="px-3 py-1 rounded-lg font-bold transition ${status === 'L' ? 'bg-amber-500 text-white shadow-md' : 'bg-white border text-slate-300'}">ลา</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function setAttHand(stdUUID, status) {
+            const date = document.getElementById('att-date').value;
+            // แก้ไขปัญหา Error 23505 ด้วย upsert onConflict
+            const { error } = await _sb.from('attendance').upsert({ student_id: stdUUID, check_date: date, status: status }, { onConflict: 'student_id, check_date' });
+            if (!error) await loadClassData();
+        }
+
+        function renderStats() {
+            document.getElementById('att-stats-body').innerHTML = students.map(s => {
+                // ดึงข้อมูลการมาเรียนแต่ละสถานะ
+                const p = s.attendance ? s.attendance.filter(a => a.status === 'P').length : 0;
+                const a = s.attendance ? s.attendance.filter(a => a.status === 'A').length : 0;
+                const l = s.attendance ? s.attendance.filter(a => a.status === 'L').length : 0;
+
+                // คำนวณเปอร์เซ็นต์ (มา / ทั้งหมด)
+                const total = p + a + l;
+                const pct = total > 0 ? ((p / total) * 100).toFixed(0) : 0;
+
+                return `
+            <tr class="hover:bg-slate-50 transition">
+                <td class="p-3 font-mono text-blue-600">${s.std_id}</td>
+                <td class="p-3 font-bold text-slate-700 text-left">${s.name}</td>
+                <td class="p-3 text-emerald-600 font-bold">${p}</td>
+                <td class="p-3 text-red-500 font-bold">${a}</td>
+                <td class="p-3 text-amber-500 font-bold">${l}</td>
+                <td class="p-3 font-black text-indigo-600">${pct}%</td>
+            </tr>`;
+            }).join('');
+        }
+
+        // --- CLASS REPORT SYSTEM (รายงานทั้งห้อง แนวนอน) ---
+        function renderClassReport() {
+            const container = document.getElementById('class-report-container');
+            let html = `
+                <div class="text-center mb-10">
+                    <h1 class="text-3xl font-black mb-2 uppercase tracking-tighter">รายงานผลการเรียนและสถิติการมาเรียน</h1>
+                    <p class="text-lg italic font-bold text-indigo-600">วิชา: ${currentClass.subject_name} | ระดับชั้น: ${currentClass.grade_level}</p>
+                </div>
+                <table class="w-full text-center border-collapse border border-slate-900 text-[12px]">
+                    <thead class="bg-slate-100 font-bold">
+                        <tr>
+                            <th class="border border-slate-900 p-2">ที่</th>
+                            <th class="border border-slate-900 p-2 text-left">ชื่อ-นามสกุล</th>
+                            <th class="border border-slate-900 p-2">รหัส</th>
+                            <th class="border border-slate-900 p-2">เก็บ</th>
+                            <th class="border border-slate-900 p-2">กลาง</th>
+                            <th class="border border-slate-900 p-2">ปลาย</th>
+                            <th class="border border-slate-900 p-2 bg-indigo-50 font-black">รวม</th>
+                            <th class="border border-slate-900 p-2 font-black">เกรด</th>
+                            <th class="border border-slate-900 p-2 text-emerald-600">มา</th>
+                            <th class="border border-slate-900 p-2 text-red-600">ขาด</th>
+                            <th class="border border-slate-900 p-2 text-amber-600">ลา</th>
+                            <th class="border border-slate-900 p-2 font-black">มาเรียน %</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            students.forEach(s => {
+                const sc = s.scores[0] || { collect_score: 0, midterm_score: 0, final_score: 0 };
+                const t = sc.collect_score + sc.midterm_score + sc.final_score;
+                let g = 0; if (t >= 80) g = 4; else if (t >= 75) g = 3.5; else if (t >= 70) g = 3; else if (t >= 65) g = 2.5; else if (t >= 60) g = 2; else if (t >= 55) g = 1.5; else if (t >= 50) g = 1;
+                const p = s.attendance.filter(a => a.status === 'P').length;
+                const a = s.attendance.filter(a => a.status === 'A').length;
+                const l = s.attendance.filter(a => a.status === 'L').length;
+                const pct = (p + a + l) > 0 ? ((p / (p + a + l)) * 100).toFixed(0) : 0;
+                html += `
+                    <tr>
+                        <td class="border border-slate-900 p-2 font-bold">${s.roll_number}</td>
+                        <td class="border border-slate-900 p-2 text-left font-bold">${s.name}</td>
+                        <td class="border border-slate-900 p-2 font-mono">${s.std_id}</td>
+                        <td class="border border-slate-900 p-2">${sc.collect_score}</td>
+                        <td class="border border-slate-900 p-2">${sc.midterm_score}</td>
+                        <td class="border border-slate-900 p-2">${sc.final_score}</td>
+                        <td class="border border-slate-900 p-2 font-bold text-indigo-700">${t}</td>
+                        <td class="border border-slate-900 p-2 font-bold text-indigo-700 text-sm">${g}</td>
+                        <td class="border border-slate-900 p-2 text-emerald-600 font-bold">${p}</td>
+                        <td class="border border-slate-900 p-2 text-red-600 font-bold">${a}</td>
+                        <td class="border border-slate-900 p-2 text-amber-600 font-bold">${l}</td>
+                        <td class="border border-slate-900 p-2 font-black ${pct < 80 ? 'text-red-600' : 'text-slate-800'}">${pct}%</td>
+                    </tr>`;
+            });
+            html += `</tbody></table><div class="mt-10 flex justify-between items-center italic text-sm"><span>ลงชื่อ................................................ (ครูผู้สอน)</span><span>วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH')}</span></div>`;
+            container.innerHTML = html;
+        }
+
+        // --- DASHBOARD & SCORING (คงเดิมตาม v12.0) ---
+        function updDash() {
+            document.getElementById('dash-subj').innerText = currentClass.subject_name || "-";
+            document.getElementById('dash-count').innerText = students.length;
+            let tg = 0; let counts = { 4: 0, 3.5: 0, 3: 0, 2.5: 0, 2: 0, 1.5: 0, 1: 0, 0: 0 };
+            students.forEach(s => {
+                const sc = s.scores[0] || { collect_score: 0, midterm_score: 0, final_score: 0 };
+                const t = sc.collect_score + sc.midterm_score + sc.final_score;
+                let g = 0; if (t >= 80) g = 4; else if (t >= 75) g = 3.5; else if (t >= 70) g = 3; else if (t >= 65) g = 2.5; else if (t >= 60) g = 2; else if (t >= 55) g = 1.5; else if (t >= 50) g = 1;
+                counts[g]++; tg += g;
+            });
+            document.getElementById('dash-avg').innerText = students.length ? (tg / students.length).toFixed(2) : "0.00";
+            const today = new Date().toISOString().split('T')[0];
+            const pres = students.filter(s => s.attendance.some(a => a.check_date === today && a.status === 'P')).length;
+            document.getElementById('dash-att-today').innerText = students.length ? ((pres / students.length) * 100).toFixed(0) + "%" : "0%";
+            if (window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(document.getElementById('gradeChart'), {
+                type: 'bar', data: { labels: Object.keys(counts).reverse(), datasets: [{ label: 'จำนวนนักเรียน', data: Object.values(counts).reverse(), backgroundColor: '#6366f1', borderRadius: 10 }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function renderScores() {
+            document.getElementById('score-body').innerHTML = students.map(s => {
+                const sc = s.scores[0] || { collect_score: 0, midterm_score: 0, final_score: 0 };
+                const t = sc.collect_score + sc.midterm_score + sc.final_score;
+                return `<tr><td class="p-4 font-bold text-slate-300">${s.roll_number}</td><td class="p-4 font-mono text-blue-600">${s.std_id}</td><td class="p-4 text-left font-bold text-slate-700">${s.name}</td>
+            <td class="p-1"><input type="number" onchange="upSc('${s.id}','collect',this.value)" value="${sc.collect_score}" class="w-full text-center outline-none focus:ring-1 ring-indigo-300 rounded"></td>
+            <td class="p-1"><input type="number" onchange="upSc('${s.id}','midterm',this.value)" value="${sc.midterm_score}" class="w-full text-center outline-none focus:ring-1 ring-indigo-300 rounded"></td>
+            <td class="p-1"><input type="number" onchange="upSc('${s.id}','final',this.value)" value="${sc.final_score}" class="w-full text-center outline-none focus:ring-1 ring-indigo-300 rounded"></td>
+            <td class="p-4 font-black bg-indigo-50 text-indigo-700 text-lg">${t}</td>
+            <td class="p-4"><button onclick="delStd('${s.id}')" class="text-red-300 hover:text-red-500 transition font-bold text-xs uppercase">ลบ</button></td></tr>`;
+            }).join('');
+        }
+
+        async function upSc(stdId, field, val) {
+            const s = students.find(x => x.id === stdId); const scObj = s.scores[0] || { student_id: stdId };
+            scObj[field + '_score'] = parseFloat(val) || 0; await _sb.from('scores').upsert(scObj); await loadClassData();
+        }
+
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            if (id === 'attendance') setAttMode('scanner'); else stopScanner();
+            if (id === 'scores') renderScores();
+            if (id === 'class-report') renderClassReport();
+            if (id === 'report') renderA4();
+        }
+
+        function setAttMode(m) {
+            document.getElementById('area-scanner').classList.toggle('hidden', m !== 'scanner');
+            document.getElementById('area-manual').classList.toggle('hidden', m === 'scanner');
+            if (m === 'scanner') startScanner(); else stopScanner();
+        }
+
+        // --- ฟังก์ชันเปิดกล้อง (รองรับทั้งมือถือและคอม) ---
+        function startScanner() {
+            if (!scanner) {
+                scanner = new Html5Qrcode("reader");
+            }
+
+            const config = {
+                fps: 20,              // ปรับให้ภาพลื่นไหลขึ้น
+                qrbox: { width: 250, height: 250 }, // ขนาดกรอบสแกน
+                aspectRatio: 1.0      // อัตราส่วนสี่เหลี่ยมจัตุรัสเพื่อให้สแกนติดง่าย
+            };
+
+            // การใช้ facingMode: "environment" 
+            // - บนมือถือ: จะเปิดกล้องหลัง (Back Camera) อัตโนมัติ
+            // - บนคอมพิวเตอร์: จะเปิดกล้องเว็บแคมตัวหลักอัตโนมัติ
+            scanner.start(
+                { facingMode: "environment" },
+                config,
+                (decodedText) => {
+                    // เมื่อสแกนติด
+                    markAtt(decodedText);
+
+                    // เพิ่มเอฟเฟกต์สั่น (เฉพาะมือถือ) เพื่อให้ครูรู้ว่าสแกนติดแล้ว
+                    if (navigator.vibrate) navigator.vibrate(100);
+                },
+                (errorMessage) => {
+                    // ไม่ต้องทำอะไร ปล่อยให้มันหา QR ต่อไปเรื่อยๆ
+                }
+            ).catch((err) => {
+                console.error("Camera error:", err);
+                alert("ไม่สามารถเข้าถึงกล้องได้: โปรดตรวจสอบว่าคุณใช้ HTTPS หรืออนุญาตสิทธิ์การใช้กล้องแล้ว");
+            });
+        }
+
+        // --- ฟังก์ชันหยุดกล้อง ---
+        function stopScanner() {
+            if (scanner && scanner.isScanning) {
+                scanner.stop().then(() => {
+                    console.log("Scanner stopped.");
+                }).catch((err) => console.error("Stop error:", err));
+            }
+        }
+
+        // --- ฟังก์ชันสลับโหมด ---
+        function setAttMode(m) {
+            document.getElementById('area-scanner').classList.toggle('hidden', m !== 'scanner');
+            document.getElementById('area-manual').classList.toggle('hidden', m === 'scanner');
+
+            // ไฮไลต์ปุ่มให้ชัดเจน
+            document.getElementById('btn-mode-scanner').className = m === 'scanner' ?
+                'flex-1 py-2 rounded-2xl text-xs font-bold bg-indigo-600 text-white shadow-md' :
+                'flex-1 py-2 rounded-2xl text-xs font-bold text-slate-400';
+
+            document.getElementById('btn-mode-manual').className = m === 'manual' ?
+                'flex-1 py-2 rounded-2xl text-xs font-bold bg-indigo-600 text-white shadow-md' :
+                'flex-1 py-2 rounded-2xl text-xs font-bold text-slate-400';
+
+            if (m === 'scanner') {
+                startScanner();
+            } else {
+                stopScanner();
+            }
+        }
+
+        async function addNewClass() {
+            const name = prompt("ชื่อห้องเรียน:"); if (!name) return;
+            await _sb.from('classes').insert({ grade_level: name, subject_code: 'ว21201', subject_name: 'คอมพิวเตอร์' }); location.reload();
+        }
+
+        async function doBulk() {
+            const input = document.getElementById('bulkInput').value.trim();
+            for (const l of input.split('\n')) {
+                const p = l.split(/\s+/); if (p.length < 2) continue;
+                await _sb.from('students').insert({ std_id: p[0], name: p.slice(1).join(" "), class_name: currentClass.grade_level, roll_number: students.length + 1 });
+            } location.reload();
+        }
+
+        function renderA4() {
+            document.getElementById('report-container').innerHTML = students.map(s => {
+                const sc = s.scores[0] || { collect_score: 0, midterm_score: 0, final_score: 0 };
+                const t = sc.collect_score + sc.midterm_score + sc.final_score;
+                let g = 0; if (t >= 80) g = 4; else if (t >= 75) g = 3.5; else if (t >= 70) g = 3; else if (t >= 65) g = 2.5; else if (t >= 60) g = 2; else if (t >= 55) g = 1.5; else if (t >= 50) g = 1;
+                return `<div class="a4-page p-16 shadow-2xl mb-12 mx-auto text-left">
+                <h1 class="text-3xl font-black text-center mb-10">รายงานผลการเรียนรายบุคคล</h1>
+                <div class="flex justify-between border-b-4 border-slate-900 pb-2 mb-8 font-bold text-lg"><span>รหัส: ${s.std_id}</span><span>ชื่อ: ${s.name}</span><span>เลขที่: ${s.roll_number}</span></div>
+                <div class="mb-10 p-4 bg-slate-50 border rounded-2xl italic">วิชา: ${currentClass.subject_name} (${currentClass.subject_code}) | ชั้น ${currentClass.grade_level}</div>
+                <table class="w-full border-2 border-slate-900 text-center mb-12 text-lg">
+                    <tr class="bg-slate-100 font-black"><th class="border-2 border-slate-900 p-4 font-bold">หมวดคะแนน</th><th class="border-2 border-slate-900 p-4 w-32 font-bold">เต็ม</th><th class="border-2 border-slate-900 p-4 w-32 font-bold">ได้</th></tr>
+                    <tr><td class="border-2 border-slate-900 p-4 text-left font-bold">คะแนนเก็บสะสม</td><td class="border-2 border-slate-900">60</td><td class="border-2 border-slate-900 font-black text-2xl text-indigo-700">${sc.collect_score}</td></tr>
+                    <tr><td class="border-2 border-slate-900 p-4 text-left font-bold">คะแนนสอบกลางภาค</td><td class="border-2 border-slate-900">20</td><td class="border-2 border-slate-900 font-black text-2xl text-indigo-700">${sc.midterm_score}</td></tr>
+                    <tr><td class="border-2 border-slate-900 p-4 text-left font-bold">คะแนนสอบปลายภาค</td><td class="border-2 border-slate-900">20</td><td class="border-2 border-slate-900 font-black text-2xl text-indigo-700">${sc.final_score}</td></tr>
+                    <tr class="bg-indigo-50 font-black"><td class="border-2 border-slate-900 p-4 text-right text-2xl">รวมทั้งสิ้น</td><td class="border-2 border-slate-900 text-2xl">100</td><td class="border-2 border-slate-900 font-black text-4xl text-indigo-700">${t}</td></tr>
+                </table>
+                <div class="mt-auto flex justify-around items-center"><div class="text-center font-black"><p class="text-[10px] uppercase text-slate-300 mb-2">GRADE</p><div class="w-32 h-32 border-[10px] border-indigo-700 rounded-full flex items-center justify-center text-5xl text-indigo-700">${g}</div></div><div class="text-center font-bold italic"><br><br>................................................<br>( ลงชื่อครูผู้สอน )</div></div></div>`;
+            }).join('');
+        }
+
+        function openBulk() { document.getElementById('bulkModal').classList.remove('hidden'); }
+        function closeBulk() { document.getElementById('bulkModal').classList.add('hidden'); }
+        function delStd(id) { if (confirm("ลบ?")) _sb.from('students').delete().eq('id', id).then(() => loadClassData()); }
+        window.onload = init;
+    </script>
+</body>
+
+</html>
