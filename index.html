@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ปพ.5 Digital Cloud v26.6 (Attendance Summary)</title>
+    <title>ปพ.5 Digital Cloud v26.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -35,6 +35,7 @@
             font-weight: 800;
             font-size: 18px;
             outline: none;
+            cursor: pointer;
         }
 
         @media print {
@@ -118,9 +119,9 @@
                         <div
                             class="bg-white p-6 rounded-[2.5rem] shadow-xl border border-indigo-100 flex flex-col lg:flex-row items-center justify-between gap-6">
                             <div class="flex items-center space-x-4">
-                                <span class="font-black text-slate-600 text-sm md:text-base">📅 วันที่เช็คชื่อ:</span>
+                                <span class="font-black text-slate-600">📅 วันที่เช็คชื่อ:</span>
                                 <input type="date" id="global-att-date" onchange="syncAttendanceDate()"
-                                    class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 text-indigo-700 font-black outline-none focus:border-indigo-500 text-xl">
+                                    class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 text-indigo-700 font-black outline-none text-xl">
                             </div>
                             <div class="flex flex-wrap items-center gap-3">
                                 <div class="bg-slate-100 p-2 rounded-2xl flex shadow-inner">
@@ -137,7 +138,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="flex flex-col lg:flex-row gap-10">
                         <div class="w-full lg:w-1/2 space-y-6">
                             <div id="area-scanner"
@@ -174,8 +174,7 @@
                         class="no-print mb-8 bg-slate-900 text-white px-10 py-4 rounded-full font-bold shadow-2xl">🖨️
                         พิมพ์เอกสารสรุปเวลาเรียน</button>
                     <div id="att-summary-container"
-                        class="a4-landscape shadow-2xl border p-12 bg-white mx-auto rounded-[3rem] text-left">
-                    </div>
+                        class="a4-landscape shadow-2xl border p-12 bg-white mx-auto rounded-[3rem] text-left"></div>
                 </div>
 
                 <div id="tab-dashboard" class="tab-content active">
@@ -213,7 +212,7 @@
                                 นำชื่อเข้า</button>
                         </div>
                         <table class="w-full text-center font-bold text-2xl">
-                            <thead class="bg-slate-50 text-slate-400 text-xs font-black uppercase">
+                            <thead class="bg-slate-50 text-slate-400 text-xs font-black">
                                 <tr>
                                     <th class="p-6">ที่</th>
                                     <th class="text-left">ชื่อ-นามสกุล</th>
@@ -250,7 +249,7 @@
             <h3 class="text-2xl font-black mb-6 text-slate-800 uppercase italic">✨ เพิ่มวิชาใหม่</h3>
             <div class="space-y-4 text-left font-bold"><input type="text" id="new-grade"
                     class="w-full border-2 rounded-2xl p-4 outline-none focus:border-indigo-500"
-                    placeholder="ระดับชั้น (เช่น ป.4)"><input type="text" id="new-code"
+                    placeholder="ชั้น (เช่น ป.4)"><input type="text" id="new-code"
                     class="w-full border-2 rounded-2xl p-4 outline-none focus:border-indigo-500"
                     placeholder="รหัสวิชา (เช่น ท14101)"><input type="text" id="new-name"
                     class="w-full border-2 rounded-2xl p-4 outline-none focus:border-indigo-500"
@@ -265,7 +264,7 @@
         <div class="bg-white rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl text-center font-bold">
             <h3 class="text-xl font-bold mb-4">นำรายชื่อเข้าห้อง</h3><textarea id="bulkInput" rows="10"
                 class="w-full border-2 rounded-2xl p-5 outline-none focus:border-indigo-500"
-                placeholder="เลขที่ ชื่อ-นามสกุล"></textarea>
+                placeholder="เลขที่ ชื่อ-นามสกุล (เช่น 101 นายสมชาย ใจดี)"></textarea>
             <div class="mt-6 flex justify-end space-x-3"><button onclick="closeBulk()"
                     class="text-slate-400 font-bold px-6">ยกเลิก</button><button onclick="doBulk()"
                     class="bg-indigo-600 text-white px-8 py-2 rounded-2xl font-bold shadow-lg">ยืนยัน</button></div>
@@ -338,56 +337,66 @@
         }
 
         function renderAttendanceSummaryReport() {
-            const container = document.getElementById('att-summary-container');
-            let html = `
-                <div class="text-center mb-10">
-                    <h1 class="text-4xl font-black uppercase tracking-tighter text-slate-900 mb-2">เอกสารสรุปสถิติการมาเรียน</h1>
-                    <p class="text-2xl font-bold text-indigo-600 tracking-wide">วิชา: ${activeSubj.subject_name} (${activeSubj.subject_code}) | ชั้น: ${activeSubj.grade_level}</p>
-                    <p class="text-slate-400 font-bold mt-2 italic">ข้อมูลสะสม ณ วันที่ ${new Date().toLocaleDateString('th-TH')}</p>
-                </div>
-                <table class="w-full text-center border-collapse border-4 border-slate-900 text-lg font-bold">
-                    <thead>
-                        <tr class="bg-slate-100">
-                            <th class="border-4 border-slate-900 p-4 w-16 text-center">ที่</th>
-                            <th class="border-4 border-slate-900 p-4 text-left">ชื่อ-นามสกุล</th>
-                            <th class="border-4 border-slate-900 p-4 w-28 text-emerald-600">มา (ครั้ง)</th>
-                            <th class="border-4 border-slate-900 p-4 w-28 text-red-600">ขาด (ครั้ง)</th>
-                            <th class="border-4 border-slate-900 p-4 w-28 text-amber-600">ลา (ครั้ง)</th>
-                            <th class="border-4 border-slate-900 p-4 w-32 bg-indigo-50 text-indigo-700">ร้อยละ</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-
+            const con = document.getElementById('att-summary-container');
+            let html = `<div class="text-center mb-10"><h1 class="text-4xl font-black uppercase tracking-tighter text-slate-900 mb-2">เอกสารสรุปสถิติการมาเรียน</h1><p class="text-2xl font-bold text-indigo-600 tracking-wide">วิชา: ${activeSubj.subject_name} | ชั้น: ${activeSubj.grade_level}</p><p class="text-slate-400 font-bold mt-2 italic">สะสม ณ วันที่ ${new Date().toLocaleDateString('th-TH')}</p></div><table class="w-full text-center border-collapse border-4 border-slate-900 text-lg font-bold"><thead><tr class="bg-slate-100"><th class="border-4 border-slate-900 p-4 w-16">ที่</th><th class="border-4 border-slate-900 p-4 text-left">ชื่อ-นามสกุล</th><th class="border-4 border-slate-900 p-4 w-28 text-emerald-600">มา</th><th class="border-4 border-slate-900 p-4 w-28 text-red-600">ขาด</th><th class="border-4 border-slate-900 p-4 w-28 text-amber-600">ลา</th><th class="border-4 border-slate-900 p-4 w-32 bg-indigo-50 text-indigo-700">ร้อยละ</th></tr></thead><tbody>`;
             students.forEach(s => {
                 const atts = s.attendance.filter(a => a.subject_name === activeSubj.subject_name);
                 const p = atts.filter(a => a.status === 'P').length, a = atts.filter(a => a.status === 'A').length, l = atts.filter(a => a.status === 'L').length;
                 const total = p + a + l; const pct = total > 0 ? ((p / total) * 100).toFixed(0) : 0;
-                html += `
-                    <tr>
-                        <td class="border-4 border-slate-900 p-3 text-center">${s.roll_number}</td>
-                        <td class="border-4 border-slate-900 p-3 text-left font-bold text-slate-800">${s.name}</td>
-                        <td class="border-4 border-slate-900 p-3">${p}</td>
-                        <td class="border-4 border-slate-900 p-3">${a}</td>
-                        <td class="border-4 border-slate-900 p-3">${l}</td>
-                        <td class="border-4 border-slate-900 p-3 font-black text-2xl">${pct}%</td>
-                    </tr>`;
+                html += `<tr><td class="border-4 border-slate-900 p-3">${s.roll_number}</td><td class="border-4 border-slate-900 p-3 text-left font-bold text-slate-800">${s.name}</td><td class="border-4 border-slate-900 p-3">${p}</td><td class="border-4 border-slate-900 p-3">${a}</td><td class="border-4 border-slate-900 p-3">${l}</td><td class="border-4 border-slate-900 p-3 font-black text-2xl">${pct}%</td></tr>`;
             });
-
-            html += `</tbody></table>
-                <div class="mt-20 flex justify-between font-black italic px-10">
-                    <div class="text-center">
-                        <p class="mb-14 text-slate-300">ลงชื่อ.........................................</p>
-                        <p>( หัวหน้าฝ่ายทะเบียน )</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="mb-14 text-slate-300">ลงชื่อ.........................................</p>
-                        <p>( ครูผู้สอน: ${activeSubj.subject_name} )</p>
-                    </div>
-                </div>`;
-            container.innerHTML = html;
+            html += `</tbody></table><div class="mt-20 flex justify-between font-black italic px-10"><div class="text-center"><p class="mb-14 text-slate-300">ลงชื่อ.........................................</p><p>( หัวหน้าฝ่ายทะเบียน )</p></div><div class="text-center"><p class="mb-14 text-slate-300">ลงชื่อ.........................................</p><p>( ครูผู้สอน: ${activeSubj.subject_name} )</p></div></div>`;
+            con.innerHTML = html;
         }
 
-        // Functions for scores, qr, dashboard remain the same from v26.4
+        async function doBulk() {
+            const input = document.getElementById('bulkInput').value.trim().split('\n');
+            let currentRoll = 1;
+            for (const l of input) {
+                const p = l.split(/\s+/); if (p.length < 2) continue;
+                await _sb.from('students').insert({
+                    std_id: p[0],
+                    name: p.slice(1).join(" "),
+                    class_name: activeSubj.grade_level,
+                    roll_number: currentRoll
+                });
+                currentRoll++;
+            }
+            location.reload();
+        }
+
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            if (id === 'attendance') setAttMode('scanner'); else stopScanner();
+            if (id === 'qr-cards') renderQRCards();
+            if (id === 'class-report') renderClassSummary();
+            if (id === 'att-summary-report') renderAttendanceSummaryReport();
+        }
+
+        function setAttMode(m) {
+            document.getElementById('area-scanner').classList.toggle('hidden', m !== 'scanner');
+            document.getElementById('area-manual').classList.toggle('hidden', m === 'scanner');
+            if (m === 'scanner') startScanner(); else stopScanner();
+            document.getElementById('btn-mode-scanner').className = m === 'scanner' ? 'flex-1 md:px-6 py-3 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-md' : 'flex-1 md:px-6 py-3 rounded-xl text-xs font-black text-slate-400';
+            document.getElementById('btn-mode-manual').className = m === 'manual' ? 'flex-1 md:px-6 py-3 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-md' : 'flex-1 md:px-6 py-3 rounded-xl text-xs font-black text-slate-400';
+        }
+
+        function startScanner() {
+            if (!scanner) scanner = new Html5Qrcode("reader");
+            const date = document.getElementById('global-att-date').value;
+            scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (text) => {
+                const std = students.find(s => s.std_id === text.trim());
+                if (std) {
+                    _sb.from('attendance').upsert({ student_id: std.id, check_date: date, status: 'P', subject_name: activeSubj.subject_name }, { onConflict: 'student_id, check_date, subject_name' }).then(() => {
+                        if (navigator.vibrate) navigator.vibrate(100);
+                        loadData();
+                    });
+                }
+            }).catch(err => { alert("ไม่สามารถเข้าถึงกล้องได้: " + err); });
+        }
+
+        // [ฟังก์ชันอื่นๆ: renderScores, upSc, renderDashboard, renderQRCards, renderClassSummary, saveNewClass, delStd ใช้โค้ดเดิมที่เสถียรแล้ว]
         function renderScores() {
             document.getElementById('score-body').innerHTML = students.map(s => {
                 const sc = s.scores.find(x => x.subject_name === activeSubj.subject_name) || { collect_score: 0, midterm_score: 0, final_score: 0 };
@@ -429,7 +438,7 @@
 
         function renderClassSummary() {
             const con = document.getElementById('class-report-container');
-            let html = `<div class="text-center mb-12"><h1 class="text-4xl font-black mb-4 uppercase tracking-tighter text-slate-900">รายงานสรุปรายวิชา</h1><p class="text-2xl font-bold text-indigo-600">${activeSubj.subject_name} | ชั้น: ${activeSubj.grade_level}</p></div><table class="w-full text-center border-collapse border-4 border-slate-900 text-lg font-bold"><thead><tr class="bg-slate-100"><th class="border-4 border-slate-900 p-4">ที่</th><th class="border-4 border-slate-900 p-4 text-left">ชื่อ-นามสกุล</th><th class="border-4 border-slate-900 p-4">คะแนน</th><th class="border-4 border-slate-900 p-4">เกรด</th><th class="border-4 border-slate-900 p-4">มาเรียน %</th></tr></thead><tbody>`;
+            let html = `<div class="text-center mb-12"><h1 class="text-4xl font-black mb-4 uppercase tracking-tighter text-slate-900">รายงานสรุปรายวิชา</h1><p class="text-2xl font-bold text-indigo-600">${activeSubj.subject_name} | ชั้น: ${activeSubj.grade_level}</p></div><table class="w-full text-center border-collapse border-4 border-slate-900 text-lg font-bold"><thead><tr class="bg-slate-100"><th class="border-4 border-slate-900 p-4 w-16">ที่</th><th class="border-4 border-slate-900 p-4 text-left">ชื่อ-นามสกุล</th><th class="border-4 border-slate-900 p-4">คะแนน</th><th class="border-4 border-slate-900 p-4">เกรด</th><th class="border-4 border-slate-900 p-4">มาเรียน %</th></tr></thead><tbody>`;
             students.forEach(s => {
                 const sc = s.scores.find(x => x.subject_name === activeSubj.subject_name) || { collect_score: 0, midterm_score: 0, final_score: 0 }; const t = sc.collect_score + sc.midterm_score + sc.final_score;
                 let g = 0; if (t >= 80) g = 4; else if (t >= 75) g = 3.5; else if (t >= 70) g = 3; else if (t >= 65) g = 2.5; else if (t >= 60) g = 2; else if (t >= 55) g = 1.5; else if (t >= 50) g = 1;
@@ -438,56 +447,6 @@
             });
             html += `</tbody></table><div class="mt-20 flex justify-between font-black italic"><span>ลงชื่อ......................................... (ครูผู้สอน)</span><span>วันที่: ${new Date().toLocaleDateString('th-TH')}</span></div>`;
             con.innerHTML = html;
-        }
-
-        function switchTab(id) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + id).classList.add('active');
-            if (id === 'attendance') setAttMode('scanner'); else stopScanner();
-            if (id === 'qr-cards') renderQRCards();
-            if (id === 'class-report') renderClassSummary();
-            if (id === 'att-summary-report') renderAttendanceSummaryReport();
-        }
-
-        function setAttMode(m) {
-            document.getElementById('area-scanner').classList.toggle('hidden', m !== 'scanner');
-            document.getElementById('area-manual').classList.toggle('hidden', m === 'scanner');
-            if (m === 'scanner') startScanner(); else stopScanner();
-
-            // Style buttons based on active mode
-            document.getElementById('btn-mode-scanner').className = m === 'scanner' ? 'flex-1 md:px-6 py-3 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-md' : 'flex-1 md:px-6 py-3 rounded-xl text-xs font-black text-slate-400';
-            document.getElementById('btn-mode-manual').className = m === 'manual' ? 'flex-1 md:px-6 py-3 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-md' : 'flex-1 md:px-6 py-3 rounded-xl text-xs font-black text-slate-400';
-        }
-
-        function startScanner() {
-            if (!scanner) scanner = new Html5Qrcode("reader");
-            const date = document.getElementById('global-att-date').value;
-
-            // ตั้งค่า config ให้รองรับทั้ง iOS และ Android ได้ดีขึ้น
-            const config = { fps: 20, qrbox: 250 };
-
-            scanner.start(
-                { facingMode: "environment" }, // พยายามเรียกใช้กล้องหลัง
-                config,
-                (text) => {
-                    const std = students.find(s => s.std_id === text.trim());
-                    if (std) {
-                        _sb.from('attendance').upsert({
-                            student_id: std.id,
-                            check_date: date,
-                            status: 'P',
-                            subject_name: activeSubj.subject_name
-                        }, { onConflict: 'student_id, check_date, subject_name' }).then(() => {
-                            if (navigator.vibrate) navigator.vibrate(100);
-                            loadData();
-                        });
-                    }
-                }
-            ).catch(err => {
-                // หากเปิดกล้องหลังไม่ได้ ให้ลองเปิดกล้องเริ่มต้น (Default) แทน
-                console.error("ไม่สามารถเปิดกล้องหลังได้:", err);
-                alert("ไม่สามารถเข้าถึงกล้องได้: " + err);
-            });
         }
 
         function stopScanner() { if (scanner && scanner.isScanning) scanner.stop(); }
@@ -501,7 +460,6 @@
         }
         function openBulk() { document.getElementById('bulkModal').classList.remove('hidden'); }
         function closeBulk() { document.getElementById('bulkModal').classList.add('hidden'); }
-        async function doBulk() { const input = document.getElementById('bulkInput').value.trim().split('\n'); for (const l of input) { const p = l.split(/\s+/); if (p.length < 2) continue; await _sb.from('students').insert({ std_id: p[0], name: p.slice(1).join(" "), class_name: activeSubj.grade_level, roll_number: students.length + 1 }); } location.reload(); }
         function delStd(id) { if (confirm("ลบ?")) _sb.from('students').delete().eq('id', id).then(() => loadData()); }
         window.onload = init;
     </script>
