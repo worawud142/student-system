@@ -1,0 +1,2509 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ปพ.5 Digital Cloud v27.3 (Minimal White)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #faf5ff 50%, #ecfeff 100%);
+            background-attachment: fixed;
+            font-size: 18px;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+            z-index: -1;
+            animation: bgFloat 20s ease-in-out infinite;
+        }
+
+        @keyframes bgFloat {
+
+            0%,
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            50% {
+                transform: scale(1.1) rotate(5deg);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(99, 102, 241, 0.5);
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .animate-fadeIn {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .animate-slideIn {
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        /* Premium Glassmorphism Navbar */
+        nav.glass-nav {
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        nav.glass-nav:hover {
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15);
+        }
+
+        .logo-text {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-selector {
+            background: rgba(255, 255, 255, 0.9) !important;
+            color: #475569 !important;
+            border: 1px solid rgba(226, 232, 240, 0.8) !important;
+            padding: 10px 18px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-selector:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+            border-color: #a5b4fc !important;
+        }
+
+        .nav-selector:focus {
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        .nav-selector option {
+            background: white;
+            color: #1e293b;
+            padding: 12px 16px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .nav-selector {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23475569' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+            min-width: 120px;
+        }
+
+        .nav-link-modern {
+            color: #64748b;
+            font-weight: 700;
+            padding: 12px 20px;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .nav-link-modern::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 16px;
+        }
+
+        .nav-link-modern:hover::before {
+            opacity: 1;
+        }
+
+        .nav-link-modern:hover {
+            color: #4f46e5;
+            transform: translateY(-2px);
+        }
+
+        .nav-link-modern.active-tab {
+            background: linear-gradient(135deg, #eef2ff, #f5f3ff) !important;
+            color: #4f46e5 !important;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Premium Cards & Containers */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(99, 102, 241, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.7) inset;
+        }
+
+        /* Premium Buttons */
+        .btn-premium {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 18px;
+            font-weight: 800;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .btn-premium::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.2));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-premium:hover::before {
+            opacity: 1;
+        }
+
+        .btn-premium:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-premium:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        /* Stats Cards */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+        }
+
+        .btn-status {
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: 800;
+            border-radius: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-status:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-status:active {
+            transform: scale(0.95);
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+            border-radius: 2rem;
+            overflow: hidden;
+            border: 4px solid transparent;
+            background: linear-gradient(white, white) padding-box,
+                linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4) border-box;
+            animation: pulse-glow 3s infinite;
+        }
+
+        /* Input Fields */
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        textarea,
+        select {
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Tables */
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(99, 102, 241, 0.05);
+            transform: scale(1.01);
+        }
+
+        /* Modal Enhancements */
+        #classModal>div,
+        #bulkModal>div {
+            animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ========== ปพ.5 PRINT STYLES ========== */
+        .pp5-preview-wrap {
+            background: #e5e7eb;
+            padding: 20px;
+            border-radius: 1rem;
+            overflow-x: auto;
+        }
+
+        .pp5-page {
+            background: white;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            font-family: 'TH Sarabun New', 'IBM Plex Sans Thai', 'Sarabun', sans-serif;
+            color: #000;
+            box-sizing: border-box;
+        }
+
+        /* Portrait for all sheets */
+        .pp5-page.portrait {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 8mm 10mm;
+            font-size: 10pt;
+        }
+
+        .pp5-t {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'TH Sarabun New', 'IBM Plex Sans Thai', 'Sarabun', sans-serif;
+        }
+
+        .pp5-t th,
+        .pp5-t td {
+            border: 1px solid #000;
+            text-align: center;
+            vertical-align: middle;
+            padding: 0 1px;
+            line-height: 1.1;
+        }
+
+        .pp5-t td.left {
+            text-align: left;
+            padding-left: 4px;
+        }
+
+        .pp5-t .bg-green {
+            background: #92d050 !important;
+        }
+
+        .pp5-t .bg-gray {
+            background: #d9d9d9 !important;
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 1.27cm;
+        }
+
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            nav,
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+                margin: 0;
+                padding: 0;
+            }
+
+            main {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+
+            body::before {
+                display: none !important;
+            }
+
+            .pp5-preview-wrap {
+                background: none;
+                padding: 0;
+            }
+
+            .pp5-page {
+                box-shadow: none;
+                margin: 0;
+                page-break-after: always;
+            }
+
+            .pp5-page:last-child {
+                page-break-after: avoid;
+            }
+
+            .pp5-page.portrait {
+                width: 210mm;
+                min-height: 297mm;
+                padding: 8mm 10mm;
+                margin: 0;
+                zoom: 0.87;
+                page-break-inside: avoid;
+            }
+
+            .pp5-t {
+                transform-origin: top left;
+                width: 100%;
+                table-layout: fixed;
+            }
+
+            .pp5-t .bg-green {
+                background: #92d050 !important;
+            }
+
+            .pp5-t .bg-gray {
+                background: #d9d9d9 !important;
+            }
+
+            #status-screen {
+                display: none !important;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            nav.glass-nav {
+                height: auto;
+                padding: 16px;
+            }
+
+            .nav-selector {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+
+            .nav-link-modern {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
+            .stat-card {
+                padding: 16px;
+            }
+
+            .glass-card {
+                border-radius: 24px;
+            }
+
+            main {
+                padding: 16px !important;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, 0.5);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #a5b4fc, #c4b5fd);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+        }
+
+        /* Face Recognition Styles */
+        .face-video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            border-radius: 2rem;
+            overflow: hidden;
+            background: #1e293b;
+        }
+
+        .face-video {
+            width: 100%;
+            height: auto;
+            display: block;
+            transform: scaleX(-1);
+        }
+
+        .face-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1);
+        }
+
+        .face-status {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .face-detected {
+            animation: faceDetectedPulse 0.5s ease-out;
+        }
+
+        @keyframes faceDetectedPulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 20px 10px rgba(16, 185, 129, 0.3);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .face-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            color: #64748b;
+        }
+
+        .face-loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .face-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .face-badge-registered {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+        }
+
+        .face-badge-unregistered {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <nav class="sticky top-0 z-50 no-print glass-nav h-24 flex items-center">
+            <div class="max-w-7xl mx-auto px-6 w-full flex justify-between items-center">
+                <div class="flex items-center space-x-6">
+                    <div class="flex items-center gap-3 border-r border-slate-200/50 pr-6 mr-2">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-200">
+                            <span class="text-white text-2xl">📚</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xl font-black tracking-tight logo-text">Teacher Hub</span>
+                            <span
+                                class="text-[9px] text-slate-400 font-bold tracking-[0.2em] uppercase">ระบบจัดการห้องเรียน</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <select id="gradeSelector" onchange="filterSubjects(this.value)" class="nav-selector">
+                            <option value="">ชั้นเรียน</option>
+                        </select>
+                        <select id="subjectSelector" onchange="changeActiveSubject(this.value)" class="nav-selector">
+                            <option value="">รายวิชา</option>
+                        </select>
+                        <button onclick="openClassModal()"
+                            class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-3 rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="hidden lg:flex items-center space-x-1">
+                    <button id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-link-modern active-tab">📊
+                        สรุปผล</button>
+                    <button id="nav-attendance" onclick="switchTab('attendance')" class="nav-link-modern">✅
+                        เช็คชื่อ</button>
+                    <button id="nav-scores" onclick="switchTab('scores')" class="nav-link-modern">📝 คะแนน</button>
+                    <!-- Dropdown for Other -->
+                    <div class="relative group">
+                        <button id="nav-other-eval" class="nav-link-modern flex items-center gap-1 cursor-pointer">
+                            📌 เมนูเพิ่มเติม
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-4 w-4 transition-transform group-hover:rotate-180" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div
+                            class="absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top left scale-95 group-hover:scale-100 flex flex-col overflow-hidden z-50">
+                            <button id="nav-traits" onclick="switchTab('traits')"
+                                class="text-left px-5 py-3 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-bold border-b border-slate-100 w-full rounded-none m-0 bg-transparent flex justify-start items-center gap-2 transition-colors">🌟
+                                คุณลักษณะฯ</button>
+                            <button id="nav-reading" onclick="switchTab('reading')"
+                                class="text-left px-5 py-3 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-bold border-b border-slate-100 w-full rounded-none m-0 bg-transparent flex justify-start items-center gap-2 transition-colors">📖
+                                อ่านคิดวิเคราะห์ฯ</button>
+                            <button id="nav-qr-cards" onclick="switchTab('qr-cards')"
+                                class="text-left px-5 py-3 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-bold w-full rounded-none m-0 bg-transparent flex justify-start items-center gap-2 transition-colors">🎫
+                                บัตร QR</button>
+                        </div>
+                    </div>
+                    <!-- /Dropdown -->
+                    <button onclick="switchTab('class-report')" class="ml-4 btn-premium">🖨️ พิมพ์รายงาน</button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto p-6 md:p-10">
+            <div id="status-screen" class="glass-card rounded-[3rem] p-16 text-center animate-fadeIn">
+                <div class="text-8xl mb-6" style="animation: float 3s ease-in-out infinite;">🎓</div>
+                <h2 class="text-3xl font-black text-slate-700 mb-4">ยินดีต้อนรับสู่ Teacher Hub</h2>
+                <p class="text-xl text-slate-500 mb-8">ระบบจัดการห้องเรียนอัจฉริยะ</p>
+                <div class="flex flex-wrap justify-center gap-4 text-sm">
+                    <span class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-bold">📊 บันทึกคะแนน</span>
+                    <span class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full font-bold">✅ เช็คชื่อ</span>
+                    <span class="bg-amber-100 text-amber-700 px-4 py-2 rounded-full font-bold">📱 สแกน QR</span>
+                    <span class="bg-purple-100 text-purple-700 px-4 py-2 rounded-full font-bold">� พิมพ์รายงาน</span>
+                </div>
+                <p class="text-slate-400 mt-8 font-medium">👆 เลือกชั้นเรียนและรายวิชาด้านบนเพื่อเริ่มใช้งาน</p>
+            </div>
+
+            <div id="main-ui" class="hidden space-y-10">
+                <div id="tab-attendance" class="tab-content">
+                    <div class="max-w-7xl mx-auto mb-8 no-print">
+                        <div
+                            class="glass-card p-6 rounded-[2.5rem] flex flex-col lg:flex-row items-center justify-between gap-6">
+                            <div class="flex items-center space-x-4">
+                                <span class="font-black text-slate-500 uppercase text-sm tracking-wider">📅
+                                    วันที่เช็คชื่อ:</span>
+                                <input type="date" id="global-att-date" onchange="syncAttendanceDate()"
+                                    class="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-slate-800 font-black outline-none focus:ring-2 ring-indigo-50 text-xl transition-all">
+                            </div>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <div class="bg-slate-100 p-2 rounded-2xl flex shadow-inner gap-1">
+                                    <button onclick="setAttMode('scanner')" id="btn-mode-scanner"
+                                        class="px-4 py-3 rounded-xl text-xs font-black transition-all whitespace-nowrap">📷
+                                        QR</button>
+                                    <button onclick="setAttMode('face-single')" id="btn-mode-face-single"
+                                        class="px-4 py-3 rounded-xl text-xs font-black transition-all whitespace-nowrap">👤
+                                        ใบหน้า</button>
+                                    <button onclick="setAttMode('face-group')" id="btn-mode-face-group"
+                                        class="px-4 py-3 rounded-xl text-xs font-black transition-all whitespace-nowrap">👥
+                                        กลุ่ม</button>
+                                    <button onclick="setAttMode('manual')" id="btn-mode-manual"
+                                        class="px-4 py-3 rounded-xl text-xs font-black transition-all whitespace-nowrap">📝
+                                        ติ๊กชื่อ</button>
+                                </div>
+                                <button onclick="switchTab('att-summary-report')"
+                                    class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-8 py-4 rounded-2xl text-xs font-black hover:bg-emerald-600 hover:text-white transition-all">📄
+                                    สรุปเวลาเรียนทั้งหมด</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col lg:flex-row gap-10">
+                        <div class="w-full lg:w-1/2 space-y-6">
+                            <div id="area-scanner" class="glass-card p-8 rounded-[2.5rem] text-center">
+                                <div id="reader"></div>
+                                <div id="qr-scan-result" class="mt-6 hidden transition-all">
+                                    <div
+                                        class="p-5 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border-2 border-emerald-300 shadow-lg animate-pulse">
+                                        <p class="text-emerald-800 font-black text-xl" id="qr-scan-name"></p>
+                                        <p class="text-emerald-600 text-sm font-bold mt-1">✅ เช็คชื่อสำเร็จ!</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="area-face-single" class="hidden glass-card p-8 rounded-[2.5rem] text-center">
+                                <div id="face-loading-single" class="face-loading">
+                                    <div class="face-loading-spinner"></div>
+                                    <p class="font-bold">กำลังโหลด Face Recognition...</p>
+                                </div>
+                                <div id="face-scanner-single" class="hidden">
+                                    <div class="face-video-container">
+                                        <video id="face-video-single" class="face-video" autoplay muted
+                                            playsinline></video>
+                                        <canvas id="face-canvas-single" class="face-canvas"></canvas>
+                                        <div id="face-status-single" class="face-status">🔍 กำลังค้นหาใบหน้า...</div>
+                                    </div>
+                                    <div id="face-result-single" class="mt-6 hidden">
+                                        <div
+                                            class="p-6 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200">
+                                            <p class="text-emerald-800 font-black text-xl" id="face-name-single"></p>
+                                            <p class="text-emerald-600 text-sm">✅ เช็คชื่อสำเร็จ</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="area-face-group" class="hidden glass-card p-8 rounded-[2.5rem] text-center">
+                                <div id="face-loading-group" class="face-loading">
+                                    <div class="face-loading-spinner"></div>
+                                    <p class="font-bold">กำลังโหลด Face Recognition...</p>
+                                </div>
+                                <div id="face-scanner-group" class="hidden">
+                                    <div class="face-video-container">
+                                        <video id="face-video-group" class="face-video" autoplay muted
+                                            playsinline></video>
+                                        <canvas id="face-canvas-group" class="face-canvas"></canvas>
+                                        <div id="face-status-group" class="face-status">👥 กำลังค้นหาหลายใบหน้า...</div>
+                                    </div>
+                                    <div id="face-result-group" class="mt-6">
+                                        <p class="text-slate-500 font-bold text-sm mb-3">เช็คชื่อแล้ว:</p>
+                                        <div id="face-names-group" class="flex flex-wrap gap-2 justify-center"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="area-manual" class="hidden glass-card p-8 rounded-[2.5rem]">
+                                <div id="manual-list" class="space-y-3 max-h-[600px] overflow-y-auto pr-2"></div>
+                            </div>
+                        </div>
+                        <div class="w-full lg:w-1/2 glass-card p-8 rounded-[3rem] overflow-x-auto text-center">
+                            <table class="w-full font-bold text-lg">
+                                <thead class="text-slate-400 text-xs font-black uppercase tracking-widest border-b">
+                                    <tr>
+                                        <th class="p-4 text-left">ชื่อ-นามสกุล</th>
+                                        <th>ใบหน้า</th>
+                                        <th>มา</th>
+                                        <th>ขาด</th>
+                                        <th>ลา</th>
+                                        <th>%</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="att-stats-body" class="divide-y text-xl"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-att-summary-report" class="tab-content text-center">
+                    <button onclick="window.print()" class="no-print mb-8 btn-premium px-10 py-4 rounded-full">🖨️
+                        พิมพ์เอกสารสรุปเวลาเรียน</button>
+                    <div id="att-summary-container" class="pp5-preview-wrap"></div>
+                </div>
+
+                <div id="tab-dashboard" class="tab-content active">
+                    <div
+                        class="glass-card p-12 rounded-[3.5rem] mb-10 flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+                        <div>
+                            <h2 id="header-grade"
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600 font-bold uppercase tracking-widest text-sm mb-2">
+                                -</h2>
+                            <h1 id="header-subject" class="text-5xl font-black text-slate-800 mb-2">-</h1>
+                            <p id="header-code" class="text-xl text-slate-400 font-medium"></p>
+                        </div>
+                        <div class="mt-6 md:mt-0 flex gap-6">
+                            <div class="stat-card text-center w-32">
+                                <p class="text-slate-400 text-xs font-bold mb-1 uppercase">นักเรียน</p>
+                                <p id="dash-count" class="text-3xl font-black text-slate-800">0</p>
+                            </div>
+                            <div class="stat-card text-center w-32 !bg-indigo-50">
+                                <p class="text-indigo-400 text-xs font-bold mb-1 uppercase">เกรดเฉลี่ย</p>
+                                <p id="dash-avg" class="text-3xl font-black text-indigo-600">0.0</p>
+                            </div>
+                            <div class="stat-card text-center w-32 !bg-emerald-50">
+                                <p class="text-emerald-400 text-xs font-bold mb-1 uppercase">มาเรียน</p>
+                                <p id="dash-att" class="text-3xl font-black text-emerald-500">0%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-10 rounded-[3rem] h-96"><canvas id="gradeChart"></canvas></div>
+                </div>
+
+                <div id="tab-scores" class="tab-content">
+                    <div class="glass-card rounded-[3.5rem] overflow-hidden text-center font-bold">
+                        <div class="p-8 border-b border-slate-100/50 flex flex-wrap justify-between items-center gap-4">
+                            <h3 class="text-xl font-black text-slate-800 uppercase">บันทึกคะแนนรายวิชา</h3>
+                            <div class="flex gap-3">
+                                <button onclick="openScoreConfig()"
+                                    class="bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 px-6 py-3 rounded-2xl text-xs font-black hover:from-amber-500 hover:to-orange-500 hover:text-white transition-all">⚙️
+                                    ตั้งค่าหมวดคะแนน</button>
+                                <button onclick="openBulk()"
+                                    class="bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 px-8 py-3 rounded-2xl text-xs font-black hover:from-indigo-500 hover:to-purple-600 hover:text-white transition-all">+
+                                    นำรายชื่อเข้า</button>
+                            </div>
+                        </div>
+                        <!-- Score Config Summary -->
+                        <div id="score-config-summary"
+                            class="p-4 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 text-sm text-slate-600 border-b border-slate-100/30">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-center font-bold text-xl">
+                                <thead id="score-thead"
+                                    class="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                                </thead>
+                                <tbody id="score-body" class="divide-y text-slate-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-traits" class="tab-content text-center">
+                    <div class="glass-card rounded-[3.5rem] overflow-hidden">
+                        <div class="p-8 border-b border-slate-100/50">
+                            <h3 class="text-xl font-black text-slate-800 uppercase">
+                                บันทึกคุณลักษณะอันพึงประสงค์ระด้บรายวิชา</h3>
+                        </div>
+                        <div
+                            class="p-4 bg-gradient-to-r from-amber-50/50 to-orange-50/50 text-sm text-slate-600 border-b border-slate-100/30 font-bold">
+                            ให้คะแนน 0-3 (3=ดีเยี่ยม, 2=ดี, 1=ผ่าน, 0=ไม่ผ่าน)
+                        </div>
+                        <div class="overflow-x-auto overflow-y-auto max-h-[60vh]">
+                            <table class="w-full text-center font-bold text-lg min-w-max">
+                                <thead id="traits-thead" class="bg-slate-50/50 text-slate-500 font-black"></thead>
+                                <tbody id="traits-body" class="divide-y text-slate-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-reading" class="tab-content text-center">
+                    <div class="glass-card rounded-[3.5rem] overflow-hidden">
+                        <div class="p-8 border-b border-slate-100/50">
+                            <h3 class="text-xl font-black text-slate-800 uppercase">บันทึกการประเมินการอ่าน คิดวิเคราะห์
+                                และเขียนสื่อความ</h3>
+                        </div>
+                        <div
+                            class="p-4 bg-gradient-to-r from-teal-50/50 to-emerald-50/50 text-sm text-slate-600 border-b border-slate-100/30 font-bold">
+                            ให้คะแนน 0-3 (3=ดีเยี่ยม, 2=ดี, 1=ผ่าน, 0=ไม่ผ่าน)
+                        </div>
+                        <div class="overflow-x-auto overflow-y-auto max-h-[60vh]">
+                            <table class="w-full text-center font-bold text-lg min-w-max relative">
+                                <thead id="reading-thead" class="bg-slate-50/50 text-slate-500 font-black"></thead>
+                                <tbody id="reading-body" class="divide-y text-slate-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-qr-cards" class="tab-content text-center">
+                    <button onclick="window.print()" class="no-print mb-10 btn-premium px-14 py-4 rounded-full">🖨️
+                        พิมพ์บัตร
+                        QR ทั้งหมด</button>
+                    <div id="qr-cards-container" class="grid grid-cols-1 md:grid-cols-4 gap-8"></div>
+                </div>
+
+                <div id="tab-class-report" class="tab-content text-center">
+                    <button onclick="window.print()" class="no-print mb-6 btn-premium px-10 py-4 rounded-full">🖨️ พิมพ์
+                        ปพ.5 (ปก + สรุปผลรวม)</button>
+                    <div id="class-report-container" class="pp5-preview-wrap"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="classModal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden z-[110] flex items-center justify-center p-4">
+        <div class="glass-card rounded-[3rem] p-10 w-full max-w-lg text-center">
+            <h3
+                class="text-2xl font-black mb-6 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 uppercase tracking-tighter">
+                ✨ เพิ่มวิชาใหม่</h3>
+            <div class="space-y-4 text-left font-bold"><input type="text" id="new-grade"
+                    class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 focus:bg-white transition-all"
+                    placeholder="ชั้น (เช่น ป.4)"><input type="text" id="new-code"
+                    class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 focus:bg-white transition-all"
+                    placeholder="รหัสวิชา (เช่น ท14101)"><input type="text" id="new-name"
+                    class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 focus:bg-white transition-all"
+                    placeholder="วิชา (เช่น ภาษาไทย)"></div>
+            <div class="mt-8 flex justify-end space-x-3"><button onclick="closeClassModal()"
+                    class="text-slate-400 font-bold px-6 hover:text-slate-600 transition-all">ยกเลิก</button><button
+                    onclick="saveNewClass()" class="btn-premium px-10 py-3">💾 บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bulkModal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden z-[100] flex items-center justify-center p-4 no-print">
+        <div class="glass-card rounded-[3rem] p-12 w-full max-w-lg text-center font-bold">
+            <h3
+                class="text-xl font-black mb-6 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+                นำรายชื่อเข้าห้อง</h3>
+            <p class="text-[10px] text-slate-400 mb-4 italic text-center">รูปแบบ: [รหัสประจำตัว][ช่องว่าง][ชื่อ-นามสกุล]
+            </p><textarea id="bulkInput" rows="10"
+                class="w-full border border-slate-200 bg-white/50 rounded-2xl p-6 outline-none focus:border-indigo-400 focus:bg-white transition-all font-mono text-sm"
+                placeholder="101 นายสมชาย ใจดี&#10;102 นางสาวสุดา มาเรียน"></textarea>
+            <div class="mt-8 flex justify-end space-x-3"><button onclick="closeBulk()"
+                    class="text-slate-400 font-bold px-6 hover:text-slate-600 transition-all">ยกเลิก</button><button
+                    onclick="doBulk()" class="btn-premium px-8 py-3">ยืนยัน</button></div>
+        </div>
+    </div>
+
+    <!-- Score Config Modal -->
+    <div id="scoreConfigModal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden z-[100] flex items-center justify-center p-4 no-print">
+        <div class="glass-card rounded-[3rem] p-10 w-full max-w-2xl text-center font-bold max-h-[90vh] overflow-y-auto">
+            <h3
+                class="text-2xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500">
+                ⚙️ ตั้งค่าหมวดคะแนน</h3>
+            <p class="text-slate-400 text-sm mb-6">กำหนดหมวดคะแนนและคะแนนเต็มสำหรับวิชานี้</p>
+
+            <div id="score-categories-list" class="space-y-3 mb-6 text-left"></div>
+
+            <button onclick="addScoreCategory()"
+                class="w-full border-2 border-dashed border-slate-300 text-slate-400 py-4 rounded-2xl font-bold hover:border-indigo-400 hover:text-indigo-500 transition-all mb-6">
+                + เพิ่มหมวดคะแนนใหม่
+            </button>
+
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-4 mb-6">
+                <p class="text-sm text-slate-600">คะแนนเต็มรวม: <span id="total-max-score"
+                        class="text-2xl font-black text-indigo-600">100</span> คะแนน</p>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeScoreConfig()"
+                    class="text-slate-400 font-bold px-6 hover:text-slate-600 transition-all">ยกเลิก</button>
+                <button onclick="saveScoreConfig()" class="btn-premium px-10 py-3">💾 บันทึกการตั้งค่า</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance History Modal -->
+    <div id="attHistoryModal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden z-[100] flex items-center justify-center p-4 no-print">
+        <div class="glass-card rounded-[3rem] p-10 w-full max-w-2xl text-center font-bold max-h-[90vh] overflow-y-auto">
+            <h3 id="attHistoryTitle"
+                class="text-2xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">
+                📅 ประวัติการเข้าเรียน
+            </h3>
+            <p id="attHistorySubtitle" class="text-slate-400 text-sm mb-6"></p>
+
+            <div id="attHistoryContent" class="space-y-2 text-left max-h-[60vh] overflow-y-auto"></div>
+
+            <div class="flex justify-end mt-6">
+                <button onclick="closeAttHistory()" class="btn-premium px-10 py-3">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Face Registration Modal -->
+    <div id="faceRegModal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden z-[100] flex items-center justify-center p-4 no-print">
+        <div class="glass-card rounded-[3rem] p-10 w-full max-w-2xl text-center font-bold max-h-[90vh] overflow-y-auto">
+            <h3
+                class="text-2xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-500">
+                📷 ลงทะเบียนใบหน้า
+            </h3>
+            <p id="faceRegSubtitle" class="text-slate-400 text-sm mb-6"></p>
+
+            <div id="faceRegLoading" class="face-loading">
+                <div class="face-loading-spinner"></div>
+                <p class="font-bold">กำลังเปิดกล้อง...</p>
+            </div>
+
+            <div id="faceRegContent" class="hidden">
+                <div class="face-video-container mb-6">
+                    <video id="faceRegVideo" class="face-video" autoplay muted playsinline></video>
+                    <canvas id="faceRegCanvas" class="face-canvas"></canvas>
+                    <div id="faceRegStatus" class="face-status">🔍 หันหน้าตรงกล้อง</div>
+                </div>
+
+                <div id="faceRegPreview" class="hidden mb-6">
+                    <img id="faceRegPreviewImg"
+                        class="w-48 h-48 mx-auto rounded-3xl object-cover border-4 border-cyan-300" />
+                    <p class="text-emerald-600 font-bold mt-3">✅ ตรวจพบใบหน้า พร้อมบันทึก</p>
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button id="faceRegCaptureBtn" onclick="captureFace()"
+                        class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-10 py-4 rounded-2xl font-black hover:from-cyan-600 hover:to-blue-700 transition-all shadow-lg">
+                        📸 ถ่ายภาพ
+                    </button>
+                    <button id="faceRegSaveBtn" onclick="saveFaceDescriptor()"
+                        class="hidden bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-10 py-4 rounded-2xl font-black hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg">
+                        💾 บันทึก
+                    </button>
+                    <button id="faceRegRetakeBtn" onclick="retakeFace()"
+                        class="hidden bg-gradient-to-r from-amber-400 to-orange-500 text-white px-8 py-4 rounded-2xl font-black hover:from-amber-500 hover:to-orange-600 transition-all shadow-lg">
+                        🔄 ถ่ายใหม่
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-6">
+                <button onclick="closeFaceReg()"
+                    class="text-slate-400 font-bold px-6 hover:text-slate-600 transition-all">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SB_URL = 'https://wfzyxmtvjprzsbyfgvtm.supabase.co';
+        const SB_KEY = 'sb_publishable_1OVpNTSCOAYhFGa_aHvtxA_qSUY_Ni8';
+        const _sb = supabase.createClient(SB_URL, SB_KEY);
+        let classes = []; let activeSubj = null; let students = []; let scanner = null;
+
+        // ============ FACE RECOGNITION VARIABLES ============
+        let faceApiLoaded = false;
+        let faceDescriptors = []; // { studentId, descriptor, name }
+        let faceStream = null;
+        let faceDetectionInterval = null;
+        let currentFaceMode = null; // 'single' or 'group'
+        let currentRegStudentId = null;
+        let capturedFaceDescriptor = null;
+        const FACE_MATCH_THRESHOLD = 0.6; // Lower = stricter matching
+        const FACE_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
+        let modelLoadingProgress = 0;
+        const checkedStudentsToday = new Set(); // Prevent duplicate check-ins in group mode
+
+        // Score Configuration - stored per subject
+        let scoreConfig = [];
+        let tempScoreConfig = []; // for modal editing
+        const defaultScoreConfig = [
+            { id: 'collect', name: 'คะแนนเก็บ', maxScore: 30, type: 'none' },
+            { id: 'midterm', name: 'กลางภาค', maxScore: 30, type: 'mid' },
+            { id: 'final', name: 'ปลายภาค', maxScore: 40, type: 'final' }
+        ];
+
+        async function loadScoreConfig() {
+            if (!activeSubj) {
+                scoreConfig = [...defaultScoreConfig];
+                return;
+            }
+            const { data } = await _sb.from('score_configs')
+                .select('config')
+                .eq('class_id', activeSubj.id)
+                .single();
+            scoreConfig = data?.config || [...defaultScoreConfig];
+        }
+
+        async function saveScoreConfigToStorage() {
+            if (!activeSubj) return;
+            await _sb.from('score_configs').upsert({
+                class_id: activeSubj.id,
+                config: scoreConfig
+            }, { onConflict: 'class_id' });
+        }
+
+        async function init() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('global-att-date').value = today;
+            const { data } = await _sb.from('classes').select('*').order('grade_level', { ascending: true });
+            if (data) {
+                classes = data;
+                const uniqueGrades = [...new Set(classes.map(c => c.grade_level))];
+                document.getElementById('gradeSelector').innerHTML = '<option value="">ชั้นเรียน</option>' + uniqueGrades.map(g => `<option value="${g}">${g}</option>`).join('');
+            }
+        }
+
+        function filterSubjects(grade) {
+            const filtered = classes.filter(c => c.grade_level === grade);
+            document.getElementById('subjectSelector').innerHTML = '<option value="">รายวิชา</option>' + filtered.map(s => `<option value="${s.id}">${s.subject_name}</option>`).join('');
+        }
+
+        async function changeActiveSubject(id) {
+            if (!id) return;
+            activeSubj = classes.find(c => c.id == id);
+            await loadScoreConfig();
+            await loadData();
+            document.getElementById('status-screen').classList.add('hidden');
+            document.getElementById('main-ui').classList.remove('hidden');
+            document.getElementById('header-grade').innerText = "ระดับชั้น " + activeSubj.grade_level;
+            document.getElementById('header-subject').innerText = activeSubj.subject_name;
+            document.getElementById('header-code').innerText = "รหัส: " + activeSubj.subject_code;
+        }
+
+        async function loadData() {
+            const { data } = await _sb.from('students').select('*, scores(*), attendance(*)').eq('class_name', activeSubj.grade_level).order('roll_number', { ascending: true });
+            students = data || [];
+            renderDashboard(); renderAttendance(); renderStats(); renderScores(); renderTraits(); renderReading();
+        }
+
+        function syncAttendanceDate() { if (activeSubj) renderAttendance(); }
+
+        function renderAttendance() {
+            const date = document.getElementById('global-att-date').value;
+            document.getElementById('manual-list').innerHTML = students.map(s => {
+                const record = s.attendance.find(a => a.check_date === date && a.subject_name === activeSubj.subject_name);
+                const status = record ? record.status : "";
+                return `<div class="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-3xl font-bold shadow-sm transition hover:border-indigo-200"><span>${s.name}</span><div class="flex space-x-1"><button onclick="setAtt('${s.id}','P')" class="btn-status ${status === 'P' ? 'bg-emerald-500 text-white shadow-lg border-emerald-500' : 'bg-slate-50 text-slate-300'}">มา</button><button onclick="setAtt('${s.id}','A')" class="btn-status ${status === 'A' ? 'bg-red-500 text-white shadow-lg border-red-500' : 'bg-white text-slate-300'}">ขาด</button><button onclick="setAtt('${s.id}','L')" class="btn-status ${status === 'L' ? 'bg-amber-500 text-white shadow-lg border-amber-500' : 'bg-white text-slate-300'}">ลา</button></div></div>`;
+            }).join('');
+        }
+
+        async function setAtt(id, status) {
+            const date = document.getElementById('global-att-date').value;
+            await _sb.from('attendance').upsert({ student_id: id, check_date: date, status: status, subject_name: activeSubj.subject_name }, { onConflict: 'student_id, check_date, subject_name' });
+            await loadData();
+        }
+
+        function renderStats() {
+            document.getElementById('att-stats-body').innerHTML = students.map(s => {
+                const atts = s.attendance.filter(a => a.subject_name === activeSubj.subject_name);
+                const p = atts.filter(a => a.status === 'P').length, a = atts.filter(a => a.status === 'A').length, l = atts.filter(a => a.status === 'L').length;
+                const total = p + a + l; const pct = total > 0 ? ((p / total) * 100).toFixed(0) : 0;
+                const hasFace = faceDescriptors.some(fd => fd.studentId === s.id);
+                const faceBtn = hasFace
+                    ? `<span class="face-badge face-badge-registered">✅ ลงทะเบียนแล้ว</span>`
+                    : `<button onclick="openFaceReg('${s.id}')" class="face-badge face-badge-unregistered hover:scale-105 transition-transform">📷 ลงทะเบียน</button>`;
+                return `<tr>
+                    <td class="p-4 text-left font-bold text-slate-700">
+                        <button onclick="showAttHistory('${s.id}')" class="hover:text-indigo-600 transition-all underline decoration-dotted underline-offset-4">${s.name}</button>
+                    </td>
+                    <td class="p-2">${faceBtn}</td>
+                    <td>${p}</td><td>${a}</td><td>${l}</td>
+                    <td class="text-indigo-600 font-black">${pct}%</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function showAttHistory(studentId) {
+            const student = students.find(s => s.id == studentId);
+            if (!student) return;
+
+            const atts = student.attendance
+                .filter(a => a.subject_name === activeSubj.subject_name)
+                .sort((a, b) => new Date(b.check_date) - new Date(a.check_date));
+
+            document.getElementById('attHistorySubtitle').textContent = student.name + ' - ' + activeSubj.subject_name;
+
+            const statusLabels = { 'P': ['มา', 'bg-emerald-100 text-emerald-700'], 'A': ['ขาด', 'bg-red-100 text-red-700'], 'L': ['ลา', 'bg-amber-100 text-amber-700'] };
+
+            if (atts.length === 0) {
+                document.getElementById('attHistoryContent').innerHTML = '<p class="text-center text-slate-400 py-10">ยังไม่มีข้อมูลการเช็คชื่อ</p>';
+            } else {
+                document.getElementById('attHistoryContent').innerHTML = atts.map(a => {
+                    const [label, css] = statusLabels[a.status] || ['?', 'bg-slate-100'];
+                    const dateFormatted = new Date(a.check_date).toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    return `<div class="flex items-center justify-between p-4 bg-white/70 rounded-2xl border border-slate-100">
+                        <span class="text-slate-700 flex-1">${dateFormatted}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="px-4 py-2 rounded-full text-sm font-black ${css}">${label}</span>
+                            <button onclick="deleteAttRecord('${studentId}', '${a.check_date}')" 
+                                class="p-2 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="ลบรายการนี้">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            document.getElementById('attHistoryModal').classList.remove('hidden');
+        }
+
+        async function deleteAttRecord(studentId, checkDate) {
+            const student = students.find(s => s.id == studentId);
+            const dateFormatted = new Date(checkDate).toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            if (!confirm(`ต้องการลบข้อมูลเช็คชื่อ\n${student?.name || ''}\nวันที่: ${dateFormatted}\nใช่หรือไม่?`)) return;
+
+            const { error } = await _sb.from('attendance')
+                .delete()
+                .eq('student_id', studentId)
+                .eq('check_date', checkDate)
+                .eq('subject_name', activeSubj.subject_name);
+
+            if (error) {
+                alert('ลบไม่สำเร็จ: ' + error.message);
+                return;
+            }
+
+            await loadData();
+            showAttHistory(studentId);
+        }
+
+        function closeAttHistory() {
+            document.getElementById('attHistoryModal').classList.add('hidden');
+        }
+
+        /* ====================================================
+           SHARED HELPERS
+           ==================================================== */
+        function pp5CalcGrade(total, max) {
+            if (!max) return '0';
+            const p = (total / max) * 100;
+            if (p >= 80) return '4'; if (p >= 75) return '3.5'; if (p >= 70) return '3';
+            if (p >= 65) return '2.5'; if (p >= 60) return '2'; if (p >= 55) return '1.5';
+            if (p >= 50) return '1'; return '0';
+        }
+        const TH_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        function sig3(teacher = 'ครูผู้สอน', mid = 'หัวหน้ากลุ่มสาระการเรียนรู้', top = 'ผู้อำนวยการโรงเรียน') {
+            return `<div style="display:flex;justify-content:space-around;margin-top:6mm;font-size:10pt">
+                <div style="text-align:center">ลงชื่อ......................................<br>(${teacher})<br>........./........./.........</div>
+                <div style="text-align:center">ลงชื่อ......................................<br>(${mid})<br>........./........./.........</div>
+                <div style="text-align:center">ลงชื่อ......................................<br>(${top})<br>........./........./.........</div>
+            </div>`;
+        }
+
+        /* ====================================================
+           SHEET 2-3: เวลาเรียน
+           ==================================================== */
+        function renderAttendanceSummaryReport() {
+            const con = document.getElementById('att-summary-container');
+            if (!activeSubj || !students.length) { con.innerHTML = '<p class="text-slate-400 p-10">ยังไม่มีข้อมูลนักเรียน</p>'; return; }
+            con.innerHTML = buildAttPages();
+        }
+
+        function buildAttPages() {
+            const MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+            // Define Start Date: 3 พฤศจิกายน 2568 (2025-11-03)
+            const START_DATE = new Date('2025-11-03T00:00:00');
+
+            // Build a fixed 20-week calendar (Monday-Friday)
+            const allDates = [];
+            let currDate = new Date(START_DATE);
+            while (allDates.length < 100) { // 20 weeks * 5 days
+                const day = currDate.getDay();
+                if (day >= 1 && day <= 5) { // Skip Sat(6), Sun(0)
+                    // Format as YYYY-MM-DD using local time to avoid UTC offset shifting dates
+                    const y = currDate.getFullYear();
+                    const m = String(currDate.getMonth() + 1).padStart(2, '0');
+                    const d = String(currDate.getDate()).padStart(2, '0');
+                    const dStr = `${y}-${m}-${d}`;
+                    allDates.push(dStr);
+                }
+                currDate.setDate(currDate.getDate() + 1);
+            }
+
+            // Group into weeks of 5 days each
+            const weeks = [];
+            for (let i = 0; i < allDates.length; i += 5) weeks.push(allDates.slice(i, i + 5));
+            const weeks1_10 = weeks.slice(0, 10);
+            const weeks11_20 = weeks.slice(10, 20);
+
+            function getMonth(d) { return d ? MONTHS[new Date(d).getMonth()] : ''; }
+            function getDay(d) { return d ? new Date(d).getDate() : ''; }
+
+            // Build month-spanning header for a group of 10 weeks
+            function monthGroups(wks) {
+                const groups = [];
+                wks.forEach((wk, wi) => {
+                    const mon = wk[0] ? getMonth(wk[0]) : '';
+                    if (groups.length && groups[groups.length - 1].month === mon) {
+                        groups[groups.length - 1].span++;
+                    } else {
+                        groups.push({ month: mon, span: 1 });
+                    }
+                });
+                return groups;
+            }
+
+            function sig3() {
+                return `<div style="display:flex;justify-content:space-around;margin-top:4mm;font-size:8.5pt;">
+                    <div style="text-align:center">ลงชื่อ ...........................................<br><span style="font-size:7pt">(....................................................)</span><br>ตำแหน่ง ครูผู้สอน<br>วันที่ ....../....../....</div>
+                    <div style="text-align:center">ลงชื่อ ...........................................<br><span style="font-size:7pt">(....................................................)</span><br>ตำแหน่ง หัวหน้ากลุ่มสาระการเรียนรู้<br>วันที่ ....../....../....</div>
+                    <div style="text-align:center">ลงชื่อ ...........................................<br><span style="font-size:7pt">(....................................................)</span><br>ตำแหน่ง ผู้อำนวยการโรงเรียน<br>วันที่ ....../....../....</div>
+                </div>`;
+            }
+
+            function buildAttPage(wks, summaryWks, pageNum, totalHoursLabel) {
+                const TOTAL_SLOTS = summaryWks.length * 5; // 50 per page
+                const TOTAL_FULL = TOTAL_SLOTS;
+                const PASS_THRESHOLD = Math.round(TOTAL_FULL * 0.8);
+                const mGroups = monthGroups(wks);
+                const weekStart = pageNum === 2 ? 1 : 11;
+
+                // col widths: narrow attendance cols
+                const CS = `style="width:1.3%;max-width:3mm;font-size:5pt;padding:0;text-align:center;overflow:hidden;"`;
+                const CSH = `style="width:1.3%;max-width:3mm;font-size:5pt;padding:0;text-align:center;overflow:hidden;"`;
+
+                let monthThs = mGroups.map(g => `<th colspan="${g.span * 5}" style="background:#d9d9d9;font-size:6pt;white-space:nowrap;padding:1px;">${g.month}</th>`).join('');
+                let weekThs = wks.map((w, i) => `<th colspan="5" style="font-size:6pt;padding:1px;">${weekStart + i}</th>`).join('');
+                let dateThs = wks.map(w => [0, 1, 2, 3, 4].map(j => `<th ${CSH}>${w[j] ? getDay(w[j]) : ''}</th>`).join('')).join('');
+                let hrThs = wks.map((w, i) => [1, 2, 3, 4, 5].map(j => `<th ${CSH}>${j}</th>`).join('')).join('');
+
+                // Student rows
+                const FILL = 0; // Math.max(0, 26 - students.length);
+                let trs = students.map((s, idx) => {
+                    const attMap = {};
+                    s.attendance.filter(a => a.subject_name === activeSubj.subject_name).forEach(a => attMap[a.check_date] = a.status);
+                    let cells = wks.map(w => [0, 1, 2, 3, 4].map(j => {
+                        const date = w[j];
+                        const st = date ? (attMap[date] || '') : '';
+                        let ch = '', bg = '';
+                        if (st === 'A') { ch = 'ข'; bg = 'background:#fca5a5;'; }
+                        else if (st === 'L') { ch = 'ล'; bg = 'background:#fde68a;'; }
+                        else if (st === 'T') { ch = 'ป'; bg = 'background:#fdba74;'; }
+                        else if (st === 'D') { ch = 'ด'; bg = 'background:#fbbf24;'; }
+                        return `<td style="font-size:5pt;padding:0;${bg}">${ch}</td>`;
+                    }).join('')).join('');
+
+                    let kh = 0, la = 0, pa = 0, da = 0;
+                    summaryWks.forEach(w => [0, 1, 2, 3, 4].forEach(j => {
+                        const date = w[j];
+                        const st = date ? (attMap[date] || '') : '';
+                        if (st === 'A') kh++;
+                        else if (st === 'L') la++;
+                        else if (st === 'T') pa++;
+                        else if (st === 'D') da++;
+                    }));
+                    const total_att = TOTAL_FULL - kh - la - pa - da;
+                    return `<tr style="height:6mm;">
+                        <td style="font-size:6.5pt;">${s.roll_number}</td>
+                        <td style="font-size:6.5pt;text-align:left;padding-left:2px;max-width:13%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${s.name}</td>
+                        ${cells}
+                        <td style="font-size:6pt;padding:0;">${kh || ''}</td>
+                        <td style="font-size:6pt;padding:0;">${la || ''}</td>
+                        <td style="font-size:6pt;padding:0;">${pa || ''}</td>
+                        <td style="font-size:6pt;padding:0;">${da || ''}</td>
+                        <td style="font-size:6pt;font-weight:bold;padding:0;">${total_att}</td>
+                    </tr>`;
+                }).join('');
+                for (let i = 0; i < FILL; i++) {
+                    const emptyCells = wks.map(w => '<td></td><td></td><td></td><td></td><td></td>').join('');
+                    trs += `<tr style="height:6mm;"><td style="font-size:6.5pt;">${students.length + i + 1}</td><td></td>${emptyCells}<td></td><td></td><td></td><td></td><td></td></tr>`;
+                }
+
+                const summaryLabel = pageNum === 2 ? 'กลางภาค' : 'รายภาค';
+
+                return `<div class="pp5-page portrait">
+                    <div style="font-size:8pt;margin-bottom:1mm;display:flex;justify-content:space-between;">
+                        <span style="font-weight:bold;font-size:10pt;">บันทึกเวลาเรียน</span>
+                        <span>วิชา <b>${activeSubj.subject_name}</b> รหัส <b>${activeSubj.subject_code}</b> ชั้น <b>${activeSubj.grade_level}</b> | หน้า ${pageNum}/3</span>
+                    </div>
+                    <table class="pp5-t" style="font-size:7pt;table-layout:fixed;width:100%;">
+                        <colgroup>
+                            <col style="width:5%;">
+                            <col style="width:13%;">
+                            ${wks.map(() => '<col style="width:1.3%;"><col style="width:1.3%;"><col style="width:1.3%;"><col style="width:1.3%;"><col style="width:1.3%;">').join('')}
+                            <col style="width:2%;"><col style="width:2%;"><col style="width:2%;"><col style="width:2%;"><col style="width:4%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th rowspan="4" style="font-size:6.5pt;padding:0;">เลขที่</th>
+                                <th rowspan="4" style="font-size:6.5pt;padding:0;">ชื่อ  -  สกุล</th>
+                                ${monthThs}
+                                <th colspan="4" rowspan="2" style="background:#d9d9d9;font-size:6pt;padding:0;">${summaryLabel}</th>
+                                <th rowspan="4" style="background:#92d050;font-size:6pt;padding:0;">รวม<br>${TOTAL_FULL}</th>
+                            </tr>
+                            <tr>${weekThs}</tr>
+                            <tr>
+                                ${dateThs}
+                                <th style="font-size:5.5pt;padding:0;">ข</th>
+                                <th style="font-size:5.5pt;padding:0;">ล</th>
+                                <th style="font-size:5.5pt;padding:0;">ป</th>
+                                <th style="font-size:5.5pt;padding:0;">ด</th>
+                            </tr>
+                            <tr>
+                                ${hrThs}
+                                <th colspan="4" style="font-size:5.5pt;padding:0;white-space:nowrap;">เต็ม ${TOTAL_FULL}<br>ผ่าน ${PASS_THRESHOLD}</th>
+                            </tr>
+                        </thead>
+                        <tbody>${trs}</tbody>
+                    </table>
+                </div>`;
+            }
+            return buildAttPage(weeks1_10, weeks1_10, 2, 40) + buildAttPage(weeks11_20, weeks, 3, 80);
+        }
+
+        function renderClassSummary() {
+            const con = document.getElementById('class-report-container');
+            if (!activeSubj || !students.length) { con.innerHTML = '<p class="text-slate-400 p-10">ยังไม่มีข้อมูลนักเรียน</p>'; return; }
+
+            const MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            const thYear = new Date().getFullYear() + 543;
+            const totalMax = scoreConfig.reduce((sum, cat) => sum + cat.maxScore, 0);
+
+            function calcGrade(score, max) {
+                if (!max) return '0';
+                const pct = (score / max) * 100;
+                if (pct >= 80) return '4';
+                if (pct >= 75) return '3.5';
+                if (pct >= 70) return '3';
+                if (pct >= 65) return '2.5';
+                if (pct >= 60) return '2';
+                if (pct >= 55) return '1.5';
+                if (pct >= 50) return '1';
+                return '0';
+            }
+
+            function getSData(s) {
+                const rec = s.scores.find(x => x.subject_name === activeSubj.subject_name) || {};
+                let d = rec.score_data || {};
+                if (typeof d === 'string') try { d = JSON.parse(d); } catch (e) { d = {}; }
+                return d;
+            }
+
+            function getAtt(s) {
+                const m = {};
+                s.attendance.filter(a => a.subject_name === activeSubj.subject_name).forEach(a => m[a.check_date] = a.status);
+                return m;
+            }
+
+            // Extract categories based on user 'type' setting, with name fallbacks for older data
+            let midCat = scoreConfig.find(c => c.type === 'mid' || c.name === 'กลางภาค') || null;
+            let finalCat = scoreConfig.find(c => c.type === 'final' || c.name === 'ปลายภาค') || null;
+
+            // Collect mapped explicit slots, but do not pad to 8 with nulls
+            const uc8 = [];
+            scoreConfig.forEach(c => {
+                if (c.type && c.type.startsWith('u')) {
+                    const uIdx = parseInt(c.type.substring(1)) - 1;
+                    if (uIdx >= 0 && uIdx < 8) uc8[uIdx] = c;
+                }
+            });
+
+            // Map "none" or unspecified items to open slots in uc8 successively
+            // EXCLUDE midCat and finalCat so they don't appear as Unit scores
+            scoreConfig.filter(c => (c.type === 'none' || !c.type) && c !== midCat && c !== finalCat).forEach(c => {
+                let openIdx = 0;
+                while (uc8[openIdx] !== undefined) openIdx++;
+                uc8[openIdx] = c;
+            });
+            // Compact mapping but retain the explicit unit index (0-7 for Unit 1-8)
+            const definedUnits = [];
+            for (let i = 0; i < uc8.length; i++) {
+                if (uc8[i] !== undefined && uc8[i] !== null) {
+                    definedUnits.push({ cat: uc8[i], originalIndex: i });
+                }
+            }
+
+            // Grade distribution
+            const GC = { '4': 0, '3.5': 0, '3': 0, '2.5': 0, '2': 0, '1.5': 0, '1': 0, '0': 0, 'ร': 0, 'มส': 0, 'มก': 0 };
+            let sumG = 0;
+            students.forEach(s => {
+                const t = scoreConfig.reduce((a, c) => a + (getSData(s)[c.id] || 0), 0);
+                const g = calcGrade(t, totalMax);
+                if (GC[g] !== undefined) GC[g]++;
+                sumG += parseFloat(g);
+            });
+            const avgG = students.length ? (sumG / students.length).toFixed(2) : '0.00';
+
+            // Attendance date grouping
+            const dateSet = new Set();
+            students.forEach(s => s.attendance.filter(a => a.subject_name === activeSubj.subject_name).forEach(a => dateSet.add(a.check_date)));
+            const allDates = [...dateSet].sort();
+            const weeks = [];
+            for (let i = 0; i < allDates.length; i += 5) weeks.push(allDates.slice(i, i + 5));
+            while (weeks.length < 20) weeks.push([]);
+
+            function sig3() {
+                return `<div style="display:flex;justify-content:space-around;margin-top:4mm;font-size:8.5pt;">
+                    <div style="text-align:center;">ลงชื่อ ...........................................<br><span style="font-size:7pt">(....................................................)</span><br>ตำแหน่ง ครูผู้สอน<br>วันที่ ....../....../....</div>
+                    <div style="text-align:center;">ลงชื่อ ...........................................<br><span style="font-size:7pt">(....................................................)</span><br>ตำแหน่ง หัวหน้ากลุ่มสาระการเรียนรู้<br>วันที่ ....../....../....</div>
+                    <div style="text-align:center;">ลงชื่อ ...........................................<br><span style="font-size:7pt">(....................................................)</span><br>ตำแหน่ง ผู้อำนวยการโรงเรียน<br>วันที่ ....../....../....</div>
+                </div>`;
+            }
+
+            // ================================================
+            // PAGE 1: ปก (portrait)
+            // ================================================
+            const coverPage = `<div class="pp5-page portrait">
+                <div style="text-align:center;margin-bottom:8mm;">
+                    <div style="font-size:22pt;font-weight:bold;line-height:1.3;">สมุดบันทึกผลการพัฒนาคุณภาพผู้เรียนรายวิชา (ปพ.5)</div>
+                    <div style="font-size:15pt;font-weight:bold;margin-top:3mm;">โรงเรียน..........................................................................</div>
+                    <div style="font-size:14pt;margin-top:2mm;">อำเภอ.............................. จังหวัด................................</div>
+                    <div style="font-size:13pt;margin-top:1mm;">สังกัด สำนักงานคณะกรรมการการศึกษาขั้นพื้นฐาน กระทรวงศึกษาธิการ</div>
+                </div>
+                <table style="width:100%;font-size:14pt;border-collapse:collapse;margin-bottom:5mm;">
+                    <tr><td style="padding:2mm 0;width:38%;">ระดับชั้น <u><b>${activeSubj.grade_level}</b></u></td>
+                        <td style="padding:2mm 0;">ภาคเรียนที่ <u><b>2</b></u></td>
+                        <td style="padding:2mm 0;">ปีการศึกษา <u><b>2568</b></u></td></tr>
+                    <tr><td colspan="2">รายวิชา <u><b>${activeSubj.subject_name}</b></u></td>
+                        <td>รหัสวิชา <u><b>${activeSubj.subject_code || '-'}</b></u></td></tr>
+                    <tr><td>เวลาเรียน <u>.........</u> ชั่วโมง/สัปดาห์</td>
+                        <td colspan="2">จำนวนหน่วยกิต <u>.........</u> หน่วยกิต</td></tr>
+                    <tr><td colspan="3">ครูผู้สอน <u>..................................................................................</u></td></tr>
+                    <tr><td colspan="3">ครูที่ปรึกษา <u>................................................................................</u></td></tr>
+                </table>
+
+                <div style="display:flex;gap:5mm;margin-bottom:4mm;align-items:flex-start;">
+                    <div style="border:1px solid #000;padding:3mm;text-align:center;font-size:12pt;min-width:28mm;">
+                        จำนวนนักเรียน<br>ทั้งหมด<br>
+                        <span style="font-size:20pt;font-weight:bold;">${students.length}</span><br>คน
+                    </div>
+                    <div style="flex:1;">
+                        <div style="text-align:center;font-weight:bold;font-size:12pt;margin-bottom:1mm;">สรุปผลการเรียน</div>
+                        <table class="pp5-t" style="font-size:10pt;">
+                            <tr>
+                                <th colspan="8" style="background:#d9d9d9;">จำนวนนักเรียนที่ได้ระดับผลการเรียน</th>
+                                <th colspan="3" style="background:#d9d9d9;">นักเรียนที่มีผล</th>
+                                <th style="background:#d9d9d9;">ผลการเรียน<br>เฉลี่ย (X̄)</th>
+                                <th style="background:#d9d9d9;">ค่าเบี่ยงเบน<br>มาตรฐาน (SD)</th>
+                            </tr>
+                            <tr>
+                                <th>4</th><th>3.5</th><th>3</th><th>2.5</th>
+                                <th>2</th><th>1.5</th><th>1</th><th>0</th>
+                                <th>ร</th><th>มส.</th><th>มก</th>
+                                <th></th><th></th>
+                            </tr>
+                            <tr>
+                                <td>${GC['4'] || 0}</td><td>${GC['3.5'] || 0}</td><td>${GC['3'] || 0}</td><td>${GC['2.5'] || 0}</td>
+                                <td>${GC['2'] || 0}</td><td>${GC['1.5'] || 0}</td><td>${GC['1'] || 0}</td><td>${GC['0'] || 0}</td>
+                                <td>0</td><td>0</td><td>0</td>
+                                <td><b>${avgG}</b></td><td></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:4mm;">
+                    <table class="pp5-t" style="font-size:9pt;">
+                        <tr>
+                            <th rowspan="2" style="background:#d9d9d9;width:28mm;">จำนวนนักเรียน<br>ทั้งหมด</th>
+                            <th colspan="8" style="background:#d9d9d9;">ผลการประเมินคุณลักษณะอันพึงประสงค์</th>
+                            <th colspan="8" style="background:#d9d9d9;">ผลการประเมินการอ่าน คิดวิเคราะห์ และเขียนสื่อความ</th>
+                        </tr>
+                        <tr>
+                            <th colspan="2">3 (ดีเยี่ยม)</th><th colspan="2">2 (ดี)</th>
+                            <th colspan="2">1 (ผ่าน)</th><th colspan="2">0 (ไม่ผ่าน)</th>
+                            <th colspan="2">3 (ดีเยี่ยม)</th><th colspan="2">2 (ดี)</th>
+                            <th colspan="2">1 (ผ่าน)</th><th colspan="2">0 (ไม่ผ่าน)</th>
+                        </tr>
+                        <tr>
+                            <td>${students.length}</td>
+                            <td colspan="2"></td><td colspan="2"></td><td colspan="2"></td><td colspan="2"></td>
+                            <td colspan="2"></td><td colspan="2"></td><td colspan="2"></td><td colspan="2"></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="margin-top:10mm;font-size:12pt;">
+                    <div style="font-weight:bold;margin-bottom:4mm;">อนุมัติผลการเรียน</div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8mm;">
+                        <div>ลงชื่อ .......................................... ครูผู้สอน<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(............................................)<br>
+                            วันที่ ....../....../....</div>
+                        <div>ลงชื่อ .......................................... หัวหน้ากลุ่มสาระการเรียนรู้<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(............................................)<br>
+                            วันที่ ....../....../....</div>
+                    </div>
+                    <div style="text-align:center;margin-bottom:5mm;">
+                        ลงชื่อ .......................................... เจ้าหน้าที่วัดผลและประเมินผล<br>
+                        <span style="font-size:11pt;">(............................................)</span>
+                        &nbsp;&nbsp;&nbsp;&nbsp; วันที่ ....../....../....</div>
+                    <div style="text-align:center;margin-bottom:8mm;">
+                        ลงชื่อ .......................................... หัวหน้ากลุ่มงานวิชาการ<br>
+                        <span style="font-size:11pt;">(............................................)</span>
+                        &nbsp;&nbsp;&nbsp;&nbsp; วันที่ ....../....../....</div>
+                    <div style="text-align:center;font-weight:bold;margin-bottom:3mm;">เรียนเสนอเพื่อพิจารณา</div>
+                    <div style="text-align:center;margin-bottom:3mm;">
+                        ลงชื่อ .......................................... รองผู้อำนวยการโรงเรียน<br>
+                        <span style="font-size:11pt;">(............................................)</span></div>
+                    <div style="text-align:center;margin-bottom:5mm;font-size:13pt;">
+                        <span style="margin-right:20mm;">☐ อนุมัติ</span>
+                        <span>☐ ไม่อนุมัติ</span>
+                    </div>
+                    <div style="text-align:center;margin-bottom:2mm;">
+                        ลงชื่อ .......................................... ผู้อำนวยการโรงเรียน<br>
+                        <span style="font-size:11pt;">(............................................)</span></div>
+                    <div style="text-align:center;">วันที่ ....../....../....</div>
+                </div>
+            </div>`;
+
+            // ================================================
+            // PAGES 2-3: เวลาเรียน (embedded from buildAttPages)
+            // ================================================
+            const attPages = buildAttPages();
+
+            // ================================================
+            // PAGES 4+: หน่วยการเรียนรู้ (1 unit per page, dynamic)
+            // ================================================
+            function buildUnitPage(catA, uA) {
+                if (!catA) return ''; // Skip undefined units
+
+                const maxA = catA.maxScore;
+                const nameA = catA.name;
+                const FILL = 0; // Math.max(0, 26 - students.length);
+
+                const subs = catA.subScores ? catA.subScores.split(',').map(s => s.trim()) : [];
+                function getH(i) { return subs[i] ? subs[i] : (i + 1); }
+
+                const maxVals = subs.map(x => parseFloat(x) || 0);
+                const totalMaxSub = maxVals.reduce((a, b) => a + b, 0);
+
+                function studentRows() {
+                    return students.map((s, i) => {
+                        const sc = parseFloat(getSData(s)[catA.id]) || 0;
+                        let cols = '<td></td><td></td><td></td><td></td><td></td><td></td><td></td>';
+
+                        if (subs.length > 0 && sc > 0 && totalMaxSub > 0) {
+                            let ints = maxVals.map(mv => Math.floor((mv / totalMaxSub) * sc));
+                            let diff = Math.round(sc - ints.reduce((a, b) => a + b, 0));
+                            let fracs = maxVals.map((mv, idx) => ({ f: ((mv / totalMaxSub) * sc) - ints[idx], idx: idx })).sort((a, b) => b.f - a.f);
+                            for (let j = 0; j < diff; j++) {
+                                if (j < fracs.length) ints[fracs[j].idx]++;
+                            }
+                            cols = '';
+                            for (let j = 0; j < 7; j++) {
+                                if (j < maxVals.length) {
+                                    cols += `<td style="font-size:10pt;">${ints[j]}</td>`;
+                                } else {
+                                    cols += `<td></td>`;
+                                }
+                            }
+                        } else if (sc > 0) {
+                            cols = `<td style="font-size:10pt;">${sc}</td><td></td><td></td><td></td><td></td><td></td><td></td>`;
+                        }
+
+                        return `<tr style="height:6.5mm;">
+                            <td style="font-size:9pt;">${s.roll_number}</td>
+                            <td style="font-size:9pt;text-align:left;padding-left:4px;">${s.name}</td>
+                            ${cols}
+                            <td style="font-weight:bold;font-size:10pt;">${sc || ''}</td>
+                            <td style="font-size:9pt;">${sc < (maxA * 0.6) && sc > 0 ? '✓' : ''}</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                return `<div class="pp5-page portrait">
+                    <table class="pp5-t" style="font-size:9pt;table-layout:fixed;width:100%;">
+                        <colgroup>
+                            <col style="width:6%;">
+                            <col style="width:23%;">
+                            <col style="width:7%;"><col style="width:7%;"><col style="width:7%;">
+                            <col style="width:7%;"><col style="width:7%;"><col style="width:7%;"><col style="width:7%;">
+                            <col style="width:11%;"><col style="width:11%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th colspan="11" style="background:#d9d9d9;font-size:12pt;padding:4px;">การประเมินคุณภาพผู้เรียนหน่วยการเรียนรู้ที่ ${uA} : ${nameA}</th>
+                            </tr>
+                            <tr>
+                                <th colspan="9" style="font-size:9pt;padding:2px;">ตัวชี้วัด / ผลการเรียนรู้</th>
+                                <th rowspan="2" style="background:#92d050;font-size:9pt;padding:2px;">รวม<br>${maxA}</th>
+                                <th rowspan="2" style="font-size:9pt;padding:2px;">ซ่อมเสริม<br>${Math.round(maxA * 0.6)}</th>
+                            </tr>
+                            <tr>
+                                <th style="font-size:9pt;padding:2px;">เลขที่</th>
+                                <th style="font-size:9pt;padding:2px;">ชื่อ-สกุล / เต็ม</th>
+                                <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
+                            </tr>
+                        </thead>
+                        <tbody>${studentRows()}</tbody>
+                    </table>
+                </div>`;
+            }
+
+            const unitPagesHTML = definedUnits.map((obj) => buildUnitPage(obj.cat, obj.originalIndex + 1)).join('');
+
+            // ================================================
+            // PAGE 8: สรุปผลรวม
+            // ================================================
+            const FILL8 = 0; // Math.max(0, 26 - students.length);
+            function unitColHeader() {
+                let h1 = '', h2 = '', h3 = '';
+                definedUnits.forEach((obj) => {
+                    h1 += `<th style="font-size:9pt;padding:2px;">${obj.originalIndex + 1}</th>`;
+                    h2 += `<th style="font-size:9pt;padding:2px;">${obj.cat.maxScore}</th>`;
+                });
+                return { h1, h2 };
+            }
+            const uh = unitColHeader();
+            const summaryPage = `<div class="pp5-page portrait">
+                <div style="text-align:center;font-weight:bold;font-size:11pt;margin-bottom:2mm;">สรุปผลการประเมินคุณภาพผู้เรียน</div>
+                <div style="font-size:8.5pt;margin-bottom:2mm;">
+                    วิชา <b>${activeSubj.subject_name}</b> &nbsp; รหัส <b>${activeSubj.subject_code || ''}</b> &nbsp;
+                    ชั้น <b>${activeSubj.grade_level}</b> &nbsp; ภาคเรียนที่ <b>2</b> &nbsp;
+                    ปีการศึกษา <b>2568</b> &nbsp; จำนวนนักเรียน <b>${students.length}</b> คน
+                </div>
+                <table class="pp5-t" style="font-size:9pt;table-layout:fixed;width:100%;">
+                    <colgroup>
+                        <col style="width:5%;">
+                        <col style="width:20%;">
+                        ${definedUnits.map(() => '<col style="width:6%;">').join('')}
+                        ${midCat ? '<col style="width:8%;">' : ''}
+                        ${finalCat ? '<col style="width:8%;">' : ''}
+                        <col style="width:8%;"><col style="width:6%;"><col style="width:10%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th rowspan="3" style="font-size:9pt;">เลขที่</th>
+                            <th rowspan="3" style="font-size:9pt;">ชื่อ - สกุล</th>
+                            <th colspan="${definedUnits.length > 0 ? definedUnits.length : 1}" style="background:#d9d9d9;font-size:9pt;padding:4px;">คะแนนหน่วยที่</th>
+                            ${midCat ? `<th rowspan="3" style="font-size:9pt;padding:2px;">${midCat.name.replace(/ /g, '<br>')}<br>${midCat.maxScore}</th>` : ''}
+                            ${finalCat ? `<th rowspan="3" style="font-size:9pt;padding:2px;">${finalCat.name.replace(/ /g, '<br>')}<br>${finalCat.maxScore}</th>` : ''}
+                            <th rowspan="3" style="font-size:9pt;padding:2px;">รวม<br>${totalMax}</th>
+                            <th rowspan="3" style="font-size:9pt;padding:2px;">ระดับ<br>ผล<br>การ<br>เรียน</th>
+                            <th rowspan="3" style="font-size:9pt;padding:2px;">หมายเหตุ</th>
+                        </tr>
+                        <tr>${definedUnits.length > 0 ? uh.h1 : '<th>-</th>'}</tr>
+                        <tr>${definedUnits.length > 0 ? uh.h2 : '<th>-</th>'}</tr>
+                    </thead>
+                    <tbody>
+                        ${students.map(s => {
+                const d = getSData(s);
+                const unitScores = definedUnits.map(obj => obj.cat ? (d[obj.cat.id] || 0) : 0);
+                const midScore = midCat ? (d[midCat.id] || 0) : 0;
+                const finScore = finalCat ? (d[finalCat.id] || 0) : 0;
+                const total = unitScores.reduce((a, b) => a + b, 0) + midScore + finScore;
+                const g = calcGrade(total, totalMax);
+                const gc = parseFloat(g) >= 2 ? '' : (parseFloat(g) >= 1 ? 'color:#7f4f00' : 'color:#cc0000');
+                return `<tr style="height:7mm;">
+                                <td style="font-size:9pt;">${s.roll_number}</td>
+                                <td style="font-size:9pt;text-align:left;padding-left:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:20%;">${s.name}</td>
+                                ${definedUnits.length > 0 ? unitScores.map(sc => `<td style="font-size:10pt;">${sc || ''}</td>`).join('') : '<td></td>'}
+                                ${midCat ? `<td style="font-size:10pt;background:#eef2ff;">${midScore || ''}</td>` : ''}
+                                ${finalCat ? `<td style="font-size:10pt;background:#eef2ff;">${finScore || ''}</td>` : ''}
+                                <td style="font-weight:bold;font-size:10pt;">${total || ''}</td>
+                                <td style="font-weight:bold;font-size:10pt;${gc}">${g}</td>
+                                <td></td>
+                            </tr>`;
+            }).join('')}
+                        ${Array(FILL8).fill(0).map((_, i) => `<tr style="height:6.5mm;">
+                            <td style="font-size:8pt;">${students.length + i + 1}</td><td></td>
+                            ${definedUnits.length > 0 ? definedUnits.map(() => '<td></td>').join('') : '<td></td>'}
+                            ${midCat ? '<td></td>' : ''}
+                            ${finalCat ? '<td></td>' : ''}
+                            <td></td><td></td><td></td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+
+            // ================================================
+            // PAGE 9: คุณลักษณะอันพึงประสงค์
+            // ================================================
+            const CHAR_TRAITS = [
+                { name: '1. รักชาติ ศาสน์ กษัตริย์', sub: 4 },
+                { name: '2. ซื่อสัตย์สุจริต', sub: 2 },
+                { name: '3. วินัย', sub: 1 },
+                { name: '4. ใฝ่เรียนรู้', sub: 2 },
+                { name: '5. อยู่อย่างพอเพียง', sub: 2 },
+                { name: '6. มุ่งมั่นในการทำงาน', sub: 2 },
+                { name: '7. รักความเป็นไทย', sub: 3 },
+                { name: '8. มีจิตสาธารณะ', sub: 2 },
+            ];
+            const FILL9 = 0; // Math.max(0, 26 - students.length);
+            const charPage = `<div class="pp5-page portrait">
+                <div style="text-align:center;font-weight:bold;font-size:11pt;margin-bottom:1mm;">สรุปผลการประเมินคุณภาพผู้เรียน</div>
+                <div style="text-align:center;font-size:9pt;margin-bottom:2mm;">คุณลักษณะอันพึงประสงค์ (จำนวนครั้งที่ประเมิน - สอดคล้องกับโปรแกรม BookMark)</div>
+                <table class="pp5-t" style="font-size:8pt;table-layout:fixed;width:100%;">
+                    <colgroup>
+                        <col style="width:5%;">
+                        <col style="width:18%;">
+                        ${CHAR_TRAITS.map(t => t.sub > 1 ? Array(t.sub).fill('<col style="width:2.5%;">').join('') + '<col style="width:2.6%;">' : '<col style="width:2.6%;">').join('')}
+                        <col style="width:6%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th rowspan="3" style="font-size:7.5pt;">เลขที่</th>
+                            <th rowspan="3" style="font-size:7.5pt;">ชื่อ - สกุล</th>
+                            ${CHAR_TRAITS.map(t => t.sub > 1
+                ? `<th colspan="${t.sub + 1}" style="font-size:7pt;text-align:center;line-height:1;padding:1px;white-space:normal;">${t.name.replace(' ', '<br>')}</th>`
+                : `<th rowspan="2" style="font-size:7pt;line-height:1;padding:1px;white-space:normal;">${t.name.replace(' ', '<br>')}</th>`
+            ).join('')}
+                            <th rowspan="3" style="font-size:7.5pt;padding:2px;">สรุปผล</th>
+                        </tr>
+                        <tr>
+                            ${CHAR_TRAITS.map(t => t.sub > 1
+                ? Array(t.sub).fill(0).map((_, i) => `<th>${i + 1}</th>`).join('') + '<th>สรุป</th>'
+                : ''
+            ).join('')}
+                        </tr>
+                        <tr>
+                            ${CHAR_TRAITS.map(t => t.sub > 1
+                ? Array(t.sub + 1).fill('<th style="color:#666;">3</th>').join('')
+                : '<th style="color:#666;">3</th>'
+            ).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${students.map(s => {
+                const d = getSData(s);
+                return `<tr style="height:6mm;">
+                            <td style="font-size:8.5pt;">${s.roll_number}</td>
+                            <td style="font-size:8.5pt;text-align:left;padding-left:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${s.name}</td>
+                            ${CHAR_TRAITS.map(t => {
+                    const val = d[t.id] !== undefined ? d[t.id] : '';
+                    if (t.sub > 1) {
+                        return Array(t.sub).fill(`<td></td>`).join('') + `<td style="font-weight:bold;">${val}</td>`;
+                    }
+                    return `<td style="font-weight:bold;">${val}</td>`;
+                }).join('')}
+                            <td></td>
+                        </tr>`;
+            }).join('')}
+                        ${Array(FILL9).fill(0).map((_, i) => `<tr style="height:6mm;">
+                            <td style="font-size:7.5pt;">${students.length + i + 1}</td><td></td>
+                            ${CHAR_TRAITS.map(t => t.sub > 1 ? Array(t.sub + 1).fill('<td></td>').join('') : '<td></td>').join('')}
+                            <td></td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+
+            // ================================================
+            // PAGE 10: อ่าน-คิด-เขียน
+            // ================================================
+            const READ_SKILLS = [
+                { name: 'การคัดสรรสื่อ', sub: 3 },
+                { name: 'จับประเด็นสำคัญ', sub: 3 },
+                { name: 'วิเคราะห์ วิจารณ์', sub: 3 },
+                { name: 'สรุปคุณค่า แง่คิดที่ดี', sub: 3 },
+                { name: 'สรุปอภิปรายขยายความ', sub: 3 },
+            ];
+            const FILL10 = 0; // Math.max(0, 26 - students.length);
+            const readPage = `<div class="pp5-page portrait">
+                <div style="text-align:center;font-weight:bold;font-size:11pt;margin-bottom:1mm;">สรุปผลการประเมินคุณภาพผู้เรียน</div>
+                <div style="text-align:center;font-size:9pt;margin-bottom:2mm;">การอ่าน  การคิดวิเคราะห์  และเขียนสื่อความ</div>
+                <table class="pp5-t" style="font-size:8pt;table-layout:fixed;width:100%;">
+                    <colgroup>
+                        <col style="width:5%;">
+                        <col style="width:20%;">
+                        ${READ_SKILLS.map(() => '<col style="width:2.5%;"><col style="width:2.5%;"><col style="width:2.5%;"><col style="width:3%;">').join('')}
+                        <col style="width:6%;">
+                        <col style="width:6.5%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th rowspan="3" style="font-size:7.5pt;">เลขที่</th>
+                            <th rowspan="3" style="font-size:7.5pt;">ชื่อ - สกุล</th>
+                            ${READ_SKILLS.map(sk => `<th colspan="4" style="font-size:7pt;padding:1px;line-height:1;white-space:normal;">${sk.name.replace(' ', '<br>')}</th>`).join('')}
+                            <th rowspan="3" style="font-size:7.5pt;">สรุปผล</th>
+                            <th rowspan="3" style="font-size:7.5pt;">หมายเหตุ</th>
+                        </tr>
+                        <tr>
+                            ${READ_SKILLS.map(() => '<th>1</th><th>2</th><th>3</th><th>สรุป</th>').join('')}
+                        </tr>
+                        <tr>
+                            ${READ_SKILLS.map(() => '<th style="color:#666;">3</th><th style="color:#666;">3</th><th style="color:#666;">3</th><th style="color:#666;">3</th>').join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${students.map(s => {
+                const d = getSData(s);
+                let totalScore = 0; let totalMax = READ_SKILLS.length * 3;
+                let summary = '';
+                let hasData = false;
+
+                const cells = READ_SKILLS.map(sk => {
+                    // Check if old data structure (r1, r2, r3, r4, r5) exists
+                    const val = d[sk.id !== undefined ? sk.id : sk.name] !== undefined ? d[sk.id !== undefined ? sk.id : sk.name] : '';
+                    if (val !== '') {
+                        totalScore += parseInt(val);
+                        hasData = true;
+                    }
+                    return `<td></td><td></td><td></td><td style="font-weight:bold;">${val}</td>`;
+                }).join('');
+
+                if (hasData) {
+                    const pct = (totalScore / totalMax) * 100;
+                    if (pct >= 80) summary = 'ดีเยี่ยม';
+                    else if (pct >= 50) summary = 'ดี';
+                    else summary = 'ผ่าน';
+                }
+
+                return `<tr style="height:6.5mm;">
+                            <td style="font-size:8.5pt;">${s.roll_number}</td>
+                            <td style="font-size:8.5pt;text-align:left;padding-left:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${s.name}</td>
+                            ${cells}
+                            <td style="font-size:8.5pt;font-weight:bold;">${summary}</td><td></td>
+                        </tr>`;
+            }).join('')}
+                        ${Array(FILL10).fill(0).map((_, i) => `<tr style="height:6mm;">
+                            <td style="font-size:7.5pt;">${students.length + i + 1}</td><td></td>
+                            ${READ_SKILLS.map(() => '<td></td><td></td><td></td><td></td>').join('')}
+                            <td></td><td></td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+            // Remove the hardcoded addition and use the looped component
+            con.innerHTML = coverPage + attPages + unitPagesHTML + summaryPage + charPage + readPage;
+        }
+
+        async function doBulk() {
+            const input = document.getElementById('bulkInput').value.trim().split('\n');
+            let currentRoll = 1;
+            for (const l of input) {
+                const p = l.split(/\s+/); if (p.length < 2) continue;
+                await _sb.from('students').insert({ std_id: p[0], name: p.slice(1).join(" "), class_name: activeSubj.grade_level, roll_number: currentRoll });
+                currentRoll++;
+            }
+            location.reload();
+        }
+
+        function stopScanner() { if (scanner && scanner.isScanning) scanner.stop(); }
+
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link-modern').forEach(el => el.classList.remove('active-tab'));
+
+            document.getElementById('tab-' + id).classList.add('active');
+
+            // Handle highlights
+            if (id === 'traits' || id === 'reading' || id === 'qr-cards') {
+                const dropBtn = document.getElementById('nav-other-eval');
+                if (dropBtn) dropBtn.classList.add('active-tab');
+            } else {
+                const navBtn = document.getElementById('nav-' + id);
+                if (navBtn) navBtn.classList.add('active-tab');
+            }
+
+            if (id === 'attendance') setAttMode('scanner'); else stopScanner();
+            if (id === 'qr-cards') renderQRCards();
+            if (id === 'class-report') renderClassSummary();
+            if (id === 'att-summary-report') renderAttendanceSummaryReport();
+            if (id === 'traits') renderTraits();
+            if (id === 'reading') renderReading();
+        }
+
+        function setAttMode(m) {
+            document.getElementById('area-scanner').classList.toggle('hidden', m !== 'scanner');
+            document.getElementById('area-face-single').classList.toggle('hidden', m !== 'face-single');
+            document.getElementById('area-face-group').classList.toggle('hidden', m !== 'face-group');
+            document.getElementById('area-manual').classList.toggle('hidden', m === 'manual');
+
+            if (m === 'scanner') startScanner(); else stopScanner();
+
+            document.getElementById('btn-mode-scanner').className = m === 'scanner' ? 'px-4 py-3 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-md transition-all whitespace-nowrap' : 'px-4 py-3 rounded-xl text-xs font-black text-slate-400 transition-all whitespace-nowrap';
+            document.getElementById('btn-mode-face-single').className = m === 'face-single' ? 'px-4 py-3 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-md transition-all whitespace-nowrap' : 'px-4 py-3 rounded-xl text-xs font-black text-slate-400 transition-all whitespace-nowrap';
+            document.getElementById('btn-mode-face-group').className = m === 'face-group' ? 'px-4 py-3 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-md transition-all whitespace-nowrap' : 'px-4 py-3 rounded-xl text-xs font-black text-slate-400 transition-all whitespace-nowrap';
+            document.getElementById('btn-mode-manual').className = m === 'manual' ? 'px-4 py-3 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-md transition-all whitespace-nowrap' : 'px-4 py-3 rounded-xl text-xs font-black text-slate-400 transition-all whitespace-nowrap';
+        }
+
+        function startScanner() {
+            if (!scanner) scanner = new Html5Qrcode("reader");
+            const date = document.getElementById('global-att-date').value;
+            scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (text) => {
+                const std = students.find(s => s.std_id === text.trim());
+                if (std) {
+                    _sb.from('attendance').upsert({ student_id: std.id, check_date: date, status: 'P', subject_name: activeSubj.subject_name }, { onConflict: 'student_id, check_date, subject_name' }).then(() => {
+                        if (navigator.vibrate) navigator.vibrate(100);
+                        document.getElementById('qr-scan-result').classList.remove('hidden');
+                        document.getElementById('qr-scan-name').innerText = std.name;
+                        setTimeout(() => document.getElementById('qr-scan-result').classList.add('hidden'), 2000);
+                        loadData();
+                    });
+                }
+            }).catch(err => { console.error(err); });
+        }
+
+        // ============ SCORE CONFIGURATION ============
+        function openScoreConfig() {
+            tempScoreConfig = JSON.parse(JSON.stringify(scoreConfig));
+            renderScoreConfigList();
+            document.getElementById('scoreConfigModal').classList.remove('hidden');
+        }
+
+        function closeScoreConfig() {
+            document.getElementById('scoreConfigModal').classList.add('hidden');
+        }
+
+        let dragCategoryIndex = null;
+
+        function renderScoreConfigList() {
+            const list = document.getElementById('score-categories-list');
+            list.innerHTML = tempScoreConfig.map((cat, idx) => `
+                <div class="flex flex-wrap items-center gap-3 p-4 bg-white/70 rounded-2xl border border-slate-200"
+                    draggable="true" 
+                    ondragstart="handleDragStart(event, ${idx})"
+                    ondragover="handleDragOver(event)"
+                    ondrop="handleDrop(event, ${idx})"
+                    ondragend="handleDragEnd(event)">
+                    <div class="cursor-grab hover:text-indigo-600 text-slate-300 flex items-center justify-center p-1 w-6" title="ลากเพื่อย้ายอันดับ">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                        </svg>
+                    </div>
+                    <span class="text-slate-400 font-bold w-6 hidden sm:inline">${idx + 1}.</span>
+                    <input type="text" value="${cat.name}" onchange="updateCatName(${idx}, this.value)" 
+                        class="flex-[1_1_120px] border border-slate-200 rounded-xl p-3 font-bold outline-none focus:border-indigo-400 transition-all text-sm sm:text-base cursor-text"
+                        placeholder="ชื่อหมวดคะแนน" onmousedown="event.stopPropagation()">
+                    <div class="flex items-center gap-2 flex-[1_1_auto]">
+                        <span class="text-slate-400 text-sm hidden sm:inline">ประเภท</span>
+                        <select onchange="updateCatType(${idx}, this.value)" onmousedown="event.stopPropagation()" class="w-full border border-slate-200 rounded-xl p-3 font-bold text-slate-600 outline-none focus:border-indigo-400 select-none appearance-none cursor-pointer text-sm sm:text-base">
+                            <option value="none" ${cat.type === 'none' || !cat.type ? 'selected' : ''}>ทั่วไป</option>
+                            <option value="u1" ${cat.type === 'u1' ? 'selected' : ''}>หน่วยที่ 1</option>
+                            <option value="u2" ${cat.type === 'u2' ? 'selected' : ''}>หน่วยที่ 2</option>
+                            <option value="u3" ${cat.type === 'u3' ? 'selected' : ''}>หน่วยที่ 3</option>
+                            <option value="u4" ${cat.type === 'u4' ? 'selected' : ''}>หน่วยที่ 4</option>
+                            <option value="u5" ${cat.type === 'u5' ? 'selected' : ''}>หน่วยที่ 5</option>
+                            <option value="u6" ${cat.type === 'u6' ? 'selected' : ''}>หน่วยที่ 6</option>
+                            <option value="u7" ${cat.type === 'u7' ? 'selected' : ''}>หน่วยที่ 7</option>
+                            <option value="u8" ${cat.type === 'u8' ? 'selected' : ''}>หน่วยที่ 8</option>
+                            <option value="mid" ${cat.type === 'mid' ? 'selected' : ''}>สอบกลางภาค</option>
+                            <option value="final" ${cat.type === 'final' ? 'selected' : ''}>สอบปลายภาค</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 flex-[1_1_auto]">
+                        <span class="text-slate-400 text-sm hidden sm:inline">คะแนนย่อย</span>
+                        <input type="text" value="${cat.subScores || ''}" onchange="updateCatSubScores(${idx}, this.value)" onmousedown="event.stopPropagation()"
+                            class="w-full sm:w-28 border border-slate-200 rounded-xl p-3 font-bold text-slate-600 outline-none focus:border-indigo-400 transition-all text-sm sm:text-base cursor-text"
+                            placeholder="เช่น 5,3,2">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-400 text-sm hidden sm:inline">เต็ม</span>
+                        <input type="number" value="${cat.maxScore}" onchange="updateCatMax(${idx}, this.value)" onmousedown="event.stopPropagation()"
+                            class="w-16 sm:w-20 border border-slate-200 rounded-xl p-3 text-center font-bold outline-none focus:border-indigo-400 transition-all text-sm sm:text-base cursor-text"
+                            min="1" max="100">
+                    </div>
+                    <button onclick="removeCat(${idx})" onmousedown="event.stopPropagation()" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-all flex-shrink-0 z-10 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+            updateTotalMaxScore();
+        }
+
+        // --- Drag and Drop Handlers ---
+        function handleDragStart(ev, idx) {
+            dragCategoryIndex = idx;
+            ev.dataTransfer.effectAllowed = 'move';
+            // Slight visual fade on the dragged element
+            ev.target.style.opacity = '0.5';
+        }
+
+        function handleDragOver(ev) {
+            ev.preventDefault();
+            ev.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDrop(ev, targetIdx) {
+            ev.stopPropagation();
+            if (dragCategoryIndex !== null && dragCategoryIndex !== targetIdx) {
+                // Determine direction to figure out splice insertion point
+                const movedItem = tempScoreConfig.splice(dragCategoryIndex, 1)[0];
+                tempScoreConfig.splice(targetIdx, 0, movedItem);
+
+                renderScoreConfigList();
+            }
+            return false;
+        }
+
+        function handleDragEnd(ev) {
+            dragCategoryIndex = null;
+            ev.target.style.opacity = '1';
+            renderScoreConfigList(); // reset opacities and visual bindings
+        }
+        // ------------------------------
+
+        function updateCatName(idx, value) {
+            tempScoreConfig[idx].name = value;
+        }
+
+        function updateCatType(idx, value) {
+            tempScoreConfig[idx].type = value;
+        }
+
+        function updateCatSubScores(idx, value) {
+            tempScoreConfig[idx].subScores = value;
+        }
+
+
+
+        function updateCatMax(idx, value) {
+            tempScoreConfig[idx].maxScore = parseInt(value) || 0;
+            updateTotalMaxScore();
+        }
+
+        function updateTotalMaxScore() {
+            const total = tempScoreConfig.reduce((sum, cat) => sum + cat.maxScore, 0);
+            document.getElementById('total-max-score').textContent = total;
+        }
+
+        function addScoreCategory() {
+            const newId = 'cat_' + Date.now();
+            tempScoreConfig.push({ id: newId, name: 'หมวดใหม่', maxScore: 10, type: 'none' });
+            renderScoreConfigList();
+        }
+
+        function removeCat(idx) {
+            if (tempScoreConfig.length <= 1) {
+                alert('ต้องมีหมวดคะแนนอย่างน้อย 1 หมวด');
+                return;
+            }
+            tempScoreConfig.splice(idx, 1);
+            renderScoreConfigList();
+        }
+
+        function saveScoreConfig() {
+            for (const cat of tempScoreConfig) {
+                if (!cat.name.trim()) { alert('กรุณากรอกชื่อหมวดคะแนนให้ครบ'); return; }
+                if (cat.maxScore <= 0) { alert('คะแนนเต็มต้องมากกว่า 0'); return; }
+            }
+            scoreConfig = JSON.parse(JSON.stringify(tempScoreConfig));
+            saveScoreConfigToStorage();
+            closeScoreConfig();
+            renderScores();
+        }
+
+        // ============ CUSTOM SCORE TRACKING FOR TRAITS AND READING ============
+
+        const CHAR_TRAITS = [
+            { id: 't1', name: '1. รักชาติ ศาสน์ กษัตริย์' },
+            { id: 't2', name: '2. ซื่อสัตย์สุจริต' },
+            { id: 't3', name: '3. วินัย' },
+            { id: 't4', name: '4. ใฝ่เรียนรู้' },
+            { id: 't5', name: '5. อยู่อย่างพอเพียง' },
+            { id: 't6', name: '6. มุ่งมั่นในการทำงาน' },
+            { id: 't7', name: '7. รักความเป็นไทย' },
+            { id: 't8', name: '8. มีจิตสาธารณะ' },
+        ];
+
+        const READ_SKILLS = [
+            { id: 'r1', name: '1. การคัดสรรสื่อ' },
+            { id: 'r2', name: '2. จับประเด็นสำคัญ' },
+            { id: 'r3', name: '3. วิเคราะห์ วิจารณ์' },
+            { id: 'r4', name: '4. สรุปคุณค่า แง่คิด' },
+            { id: 'r5', name: '5. สรุปอภิปรายขยายความ' },
+        ];
+
+        function renderTraits() {
+            const thead = document.getElementById('traits-thead');
+            thead.innerHTML = `<tr>
+                <th class="p-2 w-10 text-xs text-center sticky left-0 bg-slate-50 z-10 border-r border-slate-200">ที่</th>
+                <th class="text-left p-2 text-xs sticky left-10 bg-slate-50 z-10 border-r border-slate-200 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.1)]">ชื่อ-นามสกุล</th>
+                ${CHAR_TRAITS.map(t => `<th class="p-2 w-12 border-l border-slate-200 min-w-[3rem] align-bottom"><div class="writing-vertical text-left mx-auto text-slate-500" style="writing-mode: vertical-rl; transform: rotate(180deg); height: 140px; font-size: 12px; font-weight: 800; line-height: 1;">${t.name}</div></th>`).join('')}
+                <th class="p-2 w-4"></th>
+            </tr>`;
+
+            document.getElementById('traits-body').innerHTML = students.map(s => {
+                const scoreRecord = s.scores.find(x => x.subject_name === activeSubj.subject_name) || {};
+                let scoreData = {};
+                if (scoreRecord.score_data) {
+                    scoreData = typeof scoreRecord.score_data === 'string'
+                        ? JSON.parse(scoreRecord.score_data)
+                        : scoreRecord.score_data;
+                }
+
+                const cells = CHAR_TRAITS.map(t => {
+                    const value = scoreData[t.id] !== undefined ? scoreData[t.id] : '';
+                    return `<td class="text-center p-1 border-l border-slate-100/50 hover:bg-slate-50">
+                        <select onchange="upSc('${s.id}','${t.id}',this.value)" class="w-10 h-10 text-center bg-transparent rounded-lg p-0 border-none ring-1 ring-slate-200 outline-none focus:ring-amber-400 focus:bg-white transition-all text-sm font-bold appearance-none cursor-pointer">
+                            <option value="" ${value === '' ? 'selected' : ''}>-</option>
+                            <option value="3" ${value == 3 ? 'selected' : ''}>3</option>
+                            <option value="2" ${value == 2 ? 'selected' : ''}>2</option>
+                            <option value="1" ${value == 1 ? 'selected' : ''}>1</option>
+                            <option value="0" ${value == 0 ? 'selected' : ''}>0</option>
+                        </select>
+                    </td>`;
+                }).join('');
+
+                return `<tr data-row-id="${s.id}" class="hover:bg-slate-50/50 transition-colors group">
+                    <td class="p-2 text-slate-400 font-medium text-xs text-center sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-colors">${s.roll_number}</td>
+                    <td class="text-left font-bold text-slate-700 p-2 text-sm whitespace-nowrap sticky left-10 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.05)] transition-colors">${s.name}</td>
+                    ${cells}
+                    <td class="p-2"></td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderReading() {
+            const thead = document.getElementById('reading-thead');
+            thead.innerHTML = `<tr>
+                <th class="p-2 w-10 text-xs text-center sticky left-0 bg-slate-50 z-10 border-r border-slate-200">ที่</th>
+                <th class="text-left p-2 text-xs sticky left-10 bg-slate-50 z-10 border-r border-slate-200 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.1)]">ชื่อ-นามสกุล</th>
+                ${READ_SKILLS.map(r => `<th class="p-2 w-12 border-l border-slate-200 min-w-[3rem] align-bottom"><div class="writing-vertical text-left mx-auto text-slate-500" style="writing-mode: vertical-rl; transform: rotate(180deg); height: 140px; font-size: 12px; font-weight: 800; line-height: 1;">${r.name}</div></th>`).join('')}
+                <th class="p-2 w-4"></th>
+            </tr>`;
+
+            document.getElementById('reading-body').innerHTML = students.map(s => {
+                const scoreRecord = s.scores.find(x => x.subject_name === activeSubj.subject_name) || {};
+                let scoreData = {};
+                if (scoreRecord.score_data) {
+                    scoreData = typeof scoreRecord.score_data === 'string'
+                        ? JSON.parse(scoreRecord.score_data)
+                        : scoreRecord.score_data;
+                }
+
+                const cells = READ_SKILLS.map(r => {
+                    const value = scoreData[r.id] !== undefined ? scoreData[r.id] : '';
+                    return `<td class="text-center p-1 border-l border-slate-100/50 hover:bg-slate-50">
+                        <select onchange="upSc('${s.id}','${r.id}',this.value)" class="w-10 h-10 text-center bg-transparent rounded-lg p-0 border-none ring-1 ring-slate-200 outline-none focus:ring-teal-400 focus:bg-white transition-all text-sm font-bold appearance-none cursor-pointer">
+                            <option value="" ${value === '' ? 'selected' : ''}>-</option>
+                            <option value="3" ${value == 3 ? 'selected' : ''}>3</option>
+                            <option value="2" ${value == 2 ? 'selected' : ''}>2</option>
+                            <option value="1" ${value == 1 ? 'selected' : ''}>1</option>
+                            <option value="0" ${value == 0 ? 'selected' : ''}>0</option>
+                        </select>
+                    </td>`;
+                }).join('');
+
+                return `<tr data-row-id="${s.id}" class="hover:bg-slate-50/50 transition-colors group">
+                    <td class="p-2 text-slate-400 font-medium text-xs text-center sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-colors">${s.roll_number}</td>
+                    <td class="text-left font-bold text-slate-700 p-2 text-sm whitespace-nowrap sticky left-10 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.05)] transition-colors">${s.name}</td>
+                    ${cells}
+                    <td class="p-2"></td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ============ DYNAMIC SCORES RENDERING ============
+        function renderScores() {
+            const totalMax = scoreConfig.reduce((sum, cat) => sum + cat.maxScore, 0);
+            document.getElementById('score-config-summary').innerHTML = `
+                <div class="flex flex-wrap items-center justify-center gap-4">
+                    ${scoreConfig.map(cat => `<span class="bg-white px-3 py-1 rounded-full text-xs font-bold">${cat.name} <span class="text-indigo-600">(${cat.maxScore})</span></span>`).join('')}
+                    <span class="text-indigo-700 font-black">รวม ${totalMax} คะแนน</span>
+                </div>
+            `;
+
+            const thead = document.getElementById('score-thead');
+            thead.innerHTML = `<tr>
+                <th class="p-4 w-16">ที่</th>
+                <th class="text-left p-4">ชื่อ-นามสกุล</th>
+                ${scoreConfig.map(cat => `<th class="p-4">${cat.name}<br><span class="text-[8px] text-slate-300">(${cat.maxScore})</span></th>`).join('')}
+                <th class="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700">รวม<br><span class="text-[8px]">(${totalMax})</span></th>
+                <th class="p-4"></th>
+            </tr>`;
+
+            document.getElementById('score-body').innerHTML = students.map(s => {
+                const scoreRecord = s.scores.find(x => x.subject_name === activeSubj.subject_name) || {};
+                let scoreData = {};
+                if (scoreRecord.score_data) {
+                    scoreData = typeof scoreRecord.score_data === 'string'
+                        ? JSON.parse(scoreRecord.score_data)
+                        : scoreRecord.score_data;
+                }
+                let totalScore = 0;
+
+                const scoreCells = scoreConfig.map(cat => {
+                    const value = scoreData[cat.id] || 0;
+                    totalScore += value;
+                    return `<td class="text-center p-2">
+                        <input type="number" onchange="upSc('${s.id}','${cat.id}',this.value)" value="${value}" 
+                            max="${cat.maxScore}" min="0"
+                            class="w-16 text-center bg-slate-50 rounded-xl p-2 border-none ring-1 ring-slate-200 outline-none focus:ring-indigo-400 transition-all text-lg font-bold">
+                    </td>`;
+                }).join('');
+
+                return `<tr data-row-id="${s.id}">
+                    <td class="p-4 text-slate-300 font-bold text-center">${s.roll_number}</td>
+                    <td class="text-left font-bold text-slate-800 p-4">${s.name}</td>
+                    ${scoreCells}
+                    <td class="p-4 font-black text-indigo-700 bg-indigo-50/50 text-center text-xl" data-total-id="${s.id}">${totalScore}</td>
+                    <td class="text-center p-2"><button onclick="delStd('${s.id}')" class="text-red-300 font-bold hover:text-red-500 transition">ลบ</button></td>
+                </tr>`;
+            }).join('');
+        }
+
+        const scoreTimers = {};
+        const pendingScores = {};
+
+        function upSc(id, field, val) {
+            const key = `${id}_${field}`;
+            const numVal = parseFloat(val) || 0;
+
+            const student = students.find(s => s.id == id);
+            if (student) {
+                let scoreRecord = student.scores.find(x => x.subject_name === activeSubj.subject_name);
+                if (!scoreRecord) {
+                    scoreRecord = { subject_name: activeSubj.subject_name, score_data: {} };
+                    student.scores.push(scoreRecord);
+                }
+                if (!scoreRecord.score_data) scoreRecord.score_data = {};
+                if (typeof scoreRecord.score_data === 'string') {
+                    scoreRecord.score_data = JSON.parse(scoreRecord.score_data);
+                }
+                scoreRecord.score_data[field] = numVal;
+
+                updateTotalDisplay(id);
+            }
+
+            if (!pendingScores[id]) pendingScores[id] = {};
+            pendingScores[id][field] = numVal;
+
+            if (scoreTimers[key]) clearTimeout(scoreTimers[key]);
+            scoreTimers[key] = setTimeout(() => saveScores(id), 800);
+        }
+
+        function updateTotalDisplay(id) {
+            const student = students.find(s => s.id == id);
+            if (!student) return;
+
+            const scoreRecord = student.scores.find(x => x.subject_name === activeSubj.subject_name) || {};
+            let scoreData = scoreRecord.score_data || {};
+            if (typeof scoreData === 'string') scoreData = JSON.parse(scoreData);
+
+            const total = scoreConfig.reduce((sum, cat) => sum + (scoreData[cat.id] || 0), 0);
+            const totalCell = document.querySelector(`[data-total-id="${id}"]`);
+            if (totalCell) totalCell.textContent = total;
+        }
+
+        async function saveScores(id) {
+            if (!pendingScores[id]) return;
+
+            const { data: existingData } = await _sb.from('scores')
+                .select('*')
+                .eq('student_id', id)
+                .eq('subject_name', activeSubj.subject_name)
+                .single();
+
+            let scoreData = {};
+            if (existingData && existingData.score_data) {
+                scoreData = typeof existingData.score_data === 'string'
+                    ? JSON.parse(existingData.score_data)
+                    : existingData.score_data;
+            }
+
+            Object.assign(scoreData, pendingScores[id]);
+
+            await _sb.from('scores').upsert({
+                student_id: id,
+                subject_name: activeSubj.subject_name,
+                score_data: scoreData
+            }, { onConflict: 'student_id, subject_name' });
+
+            delete pendingScores[id];
+            showSaveIndicator(id);
+        }
+
+        function showSaveIndicator(id) {
+            const row = document.querySelector(`[data-row-id="${id}"]`);
+            if (row) {
+                row.style.background = 'rgba(16, 185, 129, 0.1)';
+                setTimeout(() => row.style.background = '', 500);
+            }
+        }
+
+        function getStudentTotalScore(s) {
+            const scoreRecord = s.scores.find(x => x.subject_name === activeSubj.subject_name) || {};
+            let scoreData = {};
+            if (scoreRecord.score_data) {
+                scoreData = typeof scoreRecord.score_data === 'string'
+                    ? JSON.parse(scoreRecord.score_data)
+                    : scoreRecord.score_data;
+            }
+            return scoreConfig.reduce((sum, cat) => sum + (scoreData[cat.id] || 0), 0);
+        }
+
+        function renderDashboard() {
+            document.getElementById('dash-count').innerText = students.length;
+            const totalMax = scoreConfig.reduce((sum, cat) => sum + cat.maxScore, 0);
+            let totalG = 0; let counts = { 4: 0, 3.5: 0, 3: 0, 2.5: 0, 2: 0, 1.5: 0, 1: 0, 0: 0 };
+            students.forEach(s => {
+                const t = getStudentTotalScore(s);
+                const pct = totalMax > 0 ? (t / totalMax) * 100 : 0;
+                let g = 0;
+                if (pct >= 80) g = 4;
+                else if (pct >= 75) g = 3.5;
+                else if (pct >= 70) g = 3;
+                else if (pct >= 65) g = 2.5;
+                else if (pct >= 60) g = 2;
+                else if (pct >= 55) g = 1.5;
+                else if (pct >= 50) g = 1;
+                counts[g]++; totalG += g;
+            });
+            document.getElementById('dash-avg').innerText = students.length ? (totalG / students.length).toFixed(1) : "0.0";
+            const date = document.getElementById('global-att-date').value;
+            const pres = students.filter(s => s.attendance.some(a => a.check_date === date && a.status === 'P' && a.subject_name === activeSubj.subject_name)).length;
+            document.getElementById('dash-att').innerText = students.length ? ((pres / students.length) * 100).toFixed(0) + "%" : "0%";
+            if (window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(document.getElementById('gradeChart'), { type: 'bar', data: { labels: Object.keys(counts).reverse(), datasets: [{ label: 'จำนวนนักเรียน', data: Object.values(counts).reverse(), backgroundColor: '#6366f1', borderRadius: 12 }] }, options: { responsive: true, maintainAspectRatio: false } });
+        }
+
+        function renderQRCards() {
+            const con = document.getElementById('qr-cards-container'); con.innerHTML = "";
+            students.forEach(s => {
+                const card = document.createElement('div'); card.className = "glass-card p-8 rounded-[2rem] text-center qr-card-print space-y-4 bg-white";
+                card.innerHTML = `<p class="text-[10px] font-black text-indigo-500 uppercase">เลขที่ ${s.roll_number}</p><div id="qr-${s.id}" class="flex justify-center p-2"></div><p class="text-lg font-bold text-slate-800">${s.name}</p>`;
+                con.appendChild(card); new QRCode(document.getElementById(`qr-${s.id}`), { text: s.std_id || s.id, width: 140, height: 140 });
+            });
+        }
+
+        // ============ FACE REGISTRATION STUBS ============
+        function openFaceReg(studentId) {
+            alert('ระบบ Face Recognition กำลังอยู่ในช่วงปรับปรุง กรุณาใช้การสแกน QR หรือเช็คชื่อด้วยตนเอง');
+        }
+        function closeFaceReg() {
+            document.getElementById('faceRegModal').classList.add('hidden');
+        }
+        function captureFace() { }
+        function saveFaceDescriptor() { }
+        function retakeFace() { }
+        function openClassModal() { document.getElementById('classModal').classList.remove('hidden'); }
+        function closeClassModal() { document.getElementById('classModal').classList.add('hidden'); }
+        async function saveNewClass() {
+            const l = document.getElementById('new-grade').value.trim(), c = document.getElementById('new-code').value.trim(), n = document.getElementById('new-name').value.trim();
+            if (!l || !c || !n) return alert("กรอกข้อมูลให้ครบ");
+            const { error } = await _sb.from('classes').insert({ grade_level: l, subject_code: c, subject_name: n });
+            if (error) alert("บันทึกไม่สำเร็จ: " + error.message); else location.reload();
+        }
+        function openBulk() { document.getElementById('bulkModal').classList.remove('hidden'); }
+        function closeBulk() { document.getElementById('bulkModal').classList.add('hidden'); }
+        function delStd(id) { if (confirm("ลบ?")) _sb.from('students').delete().eq('id', id).then(() => loadData()); }
+        window.onload = init;
+    </script>
+</body>
+
+</html>
