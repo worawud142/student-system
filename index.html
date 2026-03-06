@@ -2248,7 +2248,7 @@
                 const cells = CHAR_TRAITS.map(t => {
                     const value = scoreData[t.id] !== undefined ? scoreData[t.id] : '';
                     return `<td class="text-center p-1 border-l border-slate-100/50 hover:bg-slate-50">
-                        <select onchange="upSc('${s.id}','${t.id}',this.value)" class="w-10 h-10 text-center bg-transparent rounded-lg p-0 border-none ring-1 ring-slate-200 outline-none focus:ring-amber-400 focus:bg-white transition-all text-sm font-bold appearance-none cursor-pointer">
+                        <select onchange="upSc('${s.id}','${t.id}',this.value)" class="w-10 h-10 text-center bg-slate-50 rounded-xl p-0 border-none ring-1 ring-slate-200 outline-none focus:ring-amber-400 focus:bg-white transition-all text-lg font-bold appearance-none cursor-pointer hover:ring-amber-300 hover:bg-white" style="text-align-last: center;">
                             <option value="" ${value === '' ? 'selected' : ''}>-</option>
                             <option value="3" ${value == 3 ? 'selected' : ''}>3</option>
                             <option value="2" ${value == 2 ? 'selected' : ''}>2</option>
@@ -2288,7 +2288,7 @@
                 const cells = READ_SKILLS.map(r => {
                     const value = scoreData[r.id] !== undefined ? scoreData[r.id] : '';
                     return `<td class="text-center p-1 border-l border-slate-100/50 hover:bg-slate-50">
-                        <select onchange="upSc('${s.id}','${r.id}',this.value)" class="w-10 h-10 text-center bg-transparent rounded-lg p-0 border-none ring-1 ring-slate-200 outline-none focus:ring-teal-400 focus:bg-white transition-all text-sm font-bold appearance-none cursor-pointer">
+                        <select onchange="upSc('${s.id}','${r.id}',this.value)" class="w-10 h-10 text-center bg-slate-50 rounded-xl p-0 border-none ring-1 ring-slate-200 outline-none focus:ring-teal-400 focus:bg-white transition-all text-lg font-bold appearance-none cursor-pointer hover:ring-teal-300 hover:bg-white" style="text-align-last: center;">
                             <option value="" ${value === '' ? 'selected' : ''}>-</option>
                             <option value="3" ${value == 3 ? 'selected' : ''}>3</option>
                             <option value="2" ${value == 2 ? 'selected' : ''}>2</option>
