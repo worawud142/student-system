@@ -1389,7 +1389,7 @@
 
                 // col widths: narrow attendance cols
                 const CS = `style="width:1.4%;max-width:3mm;font-size:5pt;padding:0;text-align:center;overflow:hidden;"`;
-                const CSH = `style="width:1.4%;max-width:3mm;font-size:5pt;padding:0;text-align:center;overflow:hidden;"`;
+                const CSH = `style="width:1.4%;max-width:3mm;font-size:5pt;padding:2px 0;text-align:center;overflow:hidden;"`;
 
                 let monthThs = mGroups.map(g => `<th colspan="${g.span * 5}" style="background:#d9d9d9;font-size:6pt;white-space:nowrap;padding:1px;">${g.month}</th>`).join('');
                 let weekThs = wks.map((w, i) => `<th colspan="5" style="font-size:6pt;padding:1px;">${weekStart + i}</th>`).join('');
