@@ -1388,8 +1388,8 @@
                 const weekStart = pageNum === 2 ? 1 : 11;
 
                 // col widths: narrow attendance cols
-                const CS = `style="width:1.5%;max-width:3mm;font-size:5pt;padding:0;text-align:center;overflow:hidden;"`;
-                const CSH = `style="width:1.5%;max-width:3mm;font-size:5pt;padding:0;text-align:center;overflow:hidden;"`;
+                const CS = `style="width:1.4%;max-width:3mm;font-size:5pt;padding:0;text-align:center;overflow:hidden;"`;
+                const CSH = `style="width:1.4%;max-width:3mm;font-size:5pt;padding:0;text-align:center;overflow:hidden;"`;
 
                 let monthThs = mGroups.map(g => `<th colspan="${g.span * 5}" style="background:#d9d9d9;font-size:6pt;white-space:nowrap;padding:1px;">${g.month}</th>`).join('');
                 let weekThs = wks.map((w, i) => `<th colspan="5" style="font-size:6pt;padding:1px;">${weekStart + i}</th>`).join('');
@@ -1424,7 +1424,7 @@
                     const total_att = TOTAL_FULL - kh - la - pa - da;
                     return `<tr style="height:6mm;">
                         <td style="font-size:6.5pt;">${s.roll_number}</td>
-                        <td style="font-size:6.5pt;text-align:left;padding-left:2px;max-width:13%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${s.name}</td>
+                        <td style="font-size:6.5pt;text-align:left;padding-left:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${s.name}</td>
                         ${cells}
                         <td style="font-size:6pt;padding:0;">${kh || ''}</td>
                         <td style="font-size:6pt;padding:0;">${la || ''}</td>
@@ -1447,10 +1447,10 @@
                     </div>
                     <table class="pp5-t" style="font-size:7pt;table-layout:fixed;width:100%;">
                         <colgroup>
-                            <col style="width:5%;">
-                            <col style="width:11%;">
-                            ${wks.map(() => '<col style="width:1.5%;"><col style="width:1.5%;"><col style="width:1.5%;"><col style="width:1.5%;"><col style="width:1.5%;">').join('')}
-                            <col style="width:2%;"><col style="width:2%;"><col style="width:2%;"><col style="width:2%;"><col style="width:4%;">
+                            <col style="width:4%;">
+                            <col style="width:16%;">
+                            ${wks.map(() => '<col style="width:1.4%;"><col style="width:1.4%;"><col style="width:1.4%;"><col style="width:1.4%;"><col style="width:1.4%;">').join('')}
+                            <col style="width:1.5%;"><col style="width:1.5%;"><col style="width:1.5%;"><col style="width:1.5%;"><col style="width:4%;">
                         </colgroup>
                         <thead>
                             <tr>
