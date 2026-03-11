@@ -101,7 +101,7 @@ async function exportExcel() {
             }
             if (conf.director) {
                 ws1.getCell('G36').value = `ลงชื่อ ${conf.director}`;
-                
+
                 // Add checkmark (✓) for approval status in E34 (Approved) and I34 (Disapproved)
                 if (conf.approvalStatus === 'approved') {
                     ws1.getCell('E34').value = '✓';
@@ -186,19 +186,13 @@ async function exportExcel() {
                     safeSetRC(ws, r, 8 + dIdx, '');
                 }
 
-                // Summary columns at the end (50 days) -> starts at col 58 (BF)
-                let totalPresent = datesSpan.length - kh - la - pa - da;
-                safeSetRC(ws, r, 58, kh || ''); // BF
-                safeSetRC(ws, r, 59, la || ''); // BG
-                safeSetRC(ws, r, 60, pa || ''); // BH
-                safeSetRC(ws, r, 61, da || ''); // BI
-                safeSetRC(ws, r, 62, totalPresent); // BJ
+                // Do NOT overwrite summary columns 58-62 (BF-BJ) as they contain Excel template formulas.
             });
 
-            // clear remaining rows
+            // clear remaining rows for student details and dates, preserve formulas in 58-62
             for (let i = n; i < 50; i++) {
                 let r = 6 + i;
-                for (let c = 1; c <= 62; c++) safeSetRC(ws, r, c, null);
+                for (let c = 1; c <= 57; c++) safeSetRC(ws, r, c, null);
             }
         }
 
