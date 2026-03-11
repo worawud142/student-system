@@ -230,10 +230,10 @@ async function exportExcel() {
                 }
             });
 
-            // clear remaining rows for student details and dates, preserve formulas in 58-62
+            // clear remaining rows for student details and dates, including summary formulas
             for (let i = n; i < 50; i++) {
                 let r = 6 + i;
-                for (let c = 1; c <= 57; c++) safeSetRC(ws, r, c, null);
+                for (let c = 1; c <= 62; c++) safeSetRC(ws, r, c, null);
             }
         }
 
@@ -308,7 +308,7 @@ async function exportExcel() {
             const c2 = uc8[key2Idx];
 
             // Clear student data block to remove any shared-formula clones left in template rows
-            clearRect(ws, 6, 55, 1, 22); // A:V, rows 6-55
+            clearRect(ws, 6, 55, 1, 40); // A:AN, rows 6-55
 
             const max1 = c1 ? parseInt(c1.maxScore) : 0;
             const max2 = c2 ? parseInt(c2.maxScore) : 0;
@@ -352,7 +352,7 @@ async function exportExcel() {
         const ws8 = wb.getWorksheet('สรุปผลรวม (8)');
         if (ws8) {
             // Clear student rows block first to avoid dangling shared-formula clones
-            clearRect(ws8, 7, 56, 1, 17); // A:Q, rows 7-56
+            clearRect(ws8, 7, 56, 1, 40); // A:AN, rows 7-56
 
             const cols = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
             for (let i = 0; i < 8; i++) {
@@ -409,7 +409,7 @@ async function exportExcel() {
         const ws9 = wb.getWorksheet('คุณลักษณะ (9)');
         if (ws9) {
             // Clear student rows block first to avoid dangling shared-formula clones
-            clearRect(ws9, 7, 56, 1, 28); // A:AB, rows 7-56
+            clearRect(ws9, 7, 56, 1, 40); // A:AN, rows 7-56
 
             const CHAR_TRAITS = ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8'];
             students.forEach((s, i) => {
@@ -453,7 +453,7 @@ async function exportExcel() {
         const ws10 = wb.getWorksheet('อ่าน-คิด-เขียน (10)');
         if (ws10) {
             // Clear student rows block first to avoid dangling shared-formula clones
-            clearRect(ws10, 7, 56, 1, 23); // A:W, rows 7-56
+            clearRect(ws10, 7, 56, 1, 40); // A:AN, rows 7-56
 
             const READ_SKILLS = ['r1', 'r2', 'r3', 'r4', 'r5'];
             students.forEach((s, i) => {
