@@ -1666,7 +1666,7 @@
                         }
                     });
                 });
-                const totalSlots = actualDaysCount * hpw;
+                const totalSlots = actualDaysCount;
                 const passThreshold = Math.round(totalSlots * 0.8);
                 const mGroups = monthGroups(wks);
                 const weekStart = pageNum === 2 ? 1 : 11;
@@ -1709,11 +1709,11 @@
                         const date = w[j];
                         if (date && meetingDays.includes(new Date(date).getDay())) {
                             const st = attMap[date] || '';
-                            // Count hours missed
-                            if (st === 'A') kh += hpw;
-                            else if (st === 'L') la += hpw;
-                            else if (st === 'T') pa += hpw;
-                            else if (st === 'D') da += hpw;
+                            // Count times missed
+                            if (st === 'A') kh += 1;
+                            else if (st === 'L') la += 1;
+                            else if (st === 'T') pa += 1;
+                            else if (st === 'D') da += 1;
                         }
                     }));
                     const totalAtt = totalSlots - kh - la - pa - da;
