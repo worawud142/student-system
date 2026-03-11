@@ -13,6 +13,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="template.js"></script>
     <style>
         :root {
             --primary: #6366f1;
@@ -414,6 +418,10 @@
             font-size: 10pt;
         }
 
+        .pp5-page.attendance-page {
+            padding: 4mm 2mm;
+        }
+
         .pp5-t {
             width: 100%;
             border-collapse: collapse;
@@ -499,6 +507,10 @@
                 padding: 8mm 10mm;
                 margin: 0;
                 page-break-inside: avoid;
+            }
+
+            .pp5-page.attendance-page {
+                padding: 3mm 2mm;
             }
 
             .pp5-t {
@@ -934,9 +946,17 @@
 
                 <div id="tab-traits" class="tab-content text-center">
                     <div class="glass-card rounded-[3.5rem] overflow-hidden">
-                        <div class="p-8 border-b border-slate-100/50">
+                        <div class="p-8 border-b border-slate-100/50 flex flex-wrap justify-between items-center gap-4">
                             <h3 class="text-xl font-black text-slate-800 uppercase">
                                 บันทึกคุณลักษณะอันพึงประสงค์ระด้บรายวิชา</h3>
+                            <div class="flex gap-3">
+                                <button onclick="randomScoreTraits()"
+                                    class="bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 px-6 py-3 rounded-2xl text-xs font-black hover:from-amber-500 hover:to-orange-500 hover:text-white transition-all">🎲
+                                    สุ่มให้คะแนน</button>
+                                <button onclick="setAllTraits3()"
+                                    class="bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 px-6 py-3 rounded-2xl text-xs font-black hover:from-emerald-500 hover:to-teal-500 hover:text-white transition-all">⭐
+                                    เลือกให้ 3 ทั้งหมด</button>
+                            </div>
                         </div>
                         <div
                             class="p-4 bg-gradient-to-r from-amber-50/50 to-orange-50/50 text-sm text-slate-600 border-b border-slate-100/30 font-bold">
@@ -953,9 +973,17 @@
 
                 <div id="tab-reading" class="tab-content text-center">
                     <div class="glass-card rounded-[3.5rem] overflow-hidden">
-                        <div class="p-8 border-b border-slate-100/50">
+                        <div class="p-8 border-b border-slate-100/50 flex flex-wrap justify-between items-center gap-4">
                             <h3 class="text-xl font-black text-slate-800 uppercase">บันทึกการประเมินการอ่าน คิดวิเคราะห์
                                 และเขียนสื่อความ</h3>
+                            <div class="flex gap-3">
+                                <button onclick="randomScoreReading()"
+                                    class="bg-gradient-to-r from-teal-100 to-cyan-100 text-teal-700 px-6 py-3 rounded-2xl text-xs font-black hover:from-teal-500 hover:to-cyan-500 hover:text-white transition-all">🎲
+                                    สุ่มให้คะแนน</button>
+                                <button onclick="setAllReading3()"
+                                    class="bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 px-6 py-3 rounded-2xl text-xs font-black hover:from-emerald-500 hover:to-teal-500 hover:text-white transition-all">⭐
+                                    เลือกให้ 3 ทั้งหมด</button>
+                            </div>
                         </div>
                         <div
                             class="p-4 bg-gradient-to-r from-teal-50/50 to-emerald-50/50 text-sm text-slate-600 border-b border-slate-100/30 font-bold">
@@ -978,8 +1006,16 @@
                 </div>
 
                 <div id="tab-class-report" class="tab-content text-center">
-                    <button onclick="window.print()" class="no-print mb-6 btn-premium px-10 py-4 rounded-full">🖨️ พิมพ์
-                        ปพ.5 (ปก + สรุปผลรวม)</button>
+                    <div class="no-print flex justify-center flex-wrap gap-4 mb-6">
+                        <button onclick="openCoverConfig()"
+                            class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 py-4 rounded-full font-black hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg">✏️
+                            ตั้งค่าหน้าปก</button>
+                        <button onclick="window.print()" class="btn-premium px-10 py-4 rounded-full">🖨️ พิมพ์ ปพ.5 (ปก
+                            + สรุปผลรวม)</button>
+                        <button onclick="exportExcel()"
+                            class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-10 py-4 rounded-full font-black hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg">📥
+                            Export Excel</button>
+                    </div>
                     <div id="class-report-container" class="pp5-preview-wrap"></div>
                 </div>
             </div>
@@ -1069,6 +1105,119 @@
         </div>
     </div>
 
+    <!-- Cover Config Modal -->
+    <div id="coverConfigModal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden z-[100] flex items-center justify-center p-4 no-print">
+        <div class="glass-card rounded-[3rem] p-10 w-full max-w-2xl text-center font-bold max-h-[90vh] overflow-y-auto">
+            <h3
+                class="text-2xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">
+                ✏️ ตั้งค่าข้อมูลหน้าปก
+            </h3>
+            <p class="text-slate-400 text-sm mb-6">กำหนดข้อมูลสำหรับการส่งออกไฟล์ Excel และพิมพ์ ปพ.5</p>
+
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">ชื่อโรงเรียน</label>
+                    <input type="text" id="cover-school"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="โรงเรียนบ้านขัวก่าย">
+                </div>
+                <div>
+                    <label
+                        class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">สำนักงานเขตพื้นที่การศึกษา</label>
+                    <input type="text" id="cover-office"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="สำนักงานเขตพื้นที่การศึกษาประถมศึกษา สกลนคร เขต 3">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">ภาคเรียนที่</label>
+                    <input type="text" id="cover-term"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="เช่น 2">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">ปีการศึกษา</label>
+                    <input type="text" id="cover-year"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="เช่น 2568">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">ชื่อครูผู้สอน /
+                        ครูประจำวิชา</label>
+                    <input type="text" id="cover-teacher"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="ชื่อ-นามสกุล ครูผู้สอน">
+                </div>
+                <div>
+                    <label
+                        class="text-xs text-slate-500 uppercase tracking-wider mb-2 block">รายชื่อครูที่ปรึกษา</label>
+                    <div id="advisors-container" class="space-y-3 mb-3">
+                        <!-- Advisors will be rendered here -->
+                    </div>
+                    <button type="button" onclick="addAdvisorInput()"
+                        class="text-indigo-600 hover:text-indigo-800 font-bold text-sm flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        เพิ่มรายชื่อครูที่ปรึกษา
+                    </button>
+                </div>
+                <div>
+                    <label
+                        class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">ชื่อหัวหน้ากลุ่มสาระฯ</label>
+                    <input type="text" id="cover-head"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="ชื่อ-นามสกุล หัวหน้ากลุ่มสาระ">
+                </div>
+                <div>
+                    <label
+                        class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">ชื่อผู้อำนวยการโรงเรียน</label>
+                    <input type="text" id="cover-director"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="ชื่อ-นามสกุล ผู้อำนวยการ">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">ตำแหน่งผู้อำนวยการ</label>
+                    <input type="text" id="cover-director-title"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="เช่น ผู้อำนวยการโรงเรียนบ้านขัวก่าย">
+                </div>
+                <div>
+                    <label
+                        class="text-xs text-slate-500 uppercase tracking-wider mb-2 block">สถานะการอนุมัติผลการเรียน</label>
+                    <div class="flex gap-6 p-4 bg-white/50 rounded-2xl border border-slate-200">
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="radio" name="cover-approval" value="approved" id="cover-approval-yes"
+                                class="w-5 h-5 text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                            <span
+                                class="text-slate-700 font-bold group-hover:text-indigo-600 transition-all">อนุมัติ</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="radio" name="cover-approval" value="disapproved" id="cover-approval-no"
+                                class="w-5 h-5 text-red-600 focus:ring-red-500 border-slate-300">
+                            <span
+                                class="text-slate-700 font-bold group-hover:text-red-600 transition-all">ไม่อนุมัติ</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <label
+                        class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">จำนวนชั่วโมงต่อสัปดาห์</label>
+                    <input type="number" id="cover-hours-per-week" min="1" max="5" value="2"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="เช่น 2">
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 mt-8">
+                <button onclick="closeCoverConfig()"
+                    class="text-slate-400 font-bold px-6 hover:text-slate-600 transition-all">ยกเลิก</button>
+                <button onclick="saveCoverConfig()" class="btn-premium px-10 py-3">💾 บันทึก</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Face Registration Modal -->
     <div id="faceRegModal"
         class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden z-[100] flex items-center justify-center p-4 no-print">
@@ -1148,6 +1297,142 @@
             { id: 'final', name: 'ปลายภาค', maxScore: 40, type: 'final' }
         ];
 
+        // Cover Configuration
+        let coverConfig = {
+            school: 'โรงเรียนบ้านขัวก่าย',
+            office: 'สำนักงานเขตพื้นที่การศึกษาประถมศึกษา สกลนคร เขต 3',
+            term: '2',
+            year: '2568',
+            teacher: 'ครูผู้สอน',
+            advisors: [],
+            head: 'หัวหน้ากลุ่มสาระการเรียนรู้',
+            director: 'ผู้อำนวยการโรงเรียน',
+            directorTitle: 'ผู้อำนวยการโรงเรียนบ้านขัวก่าย',
+            approvalStatus: 'approved'
+        };
+
+        function loadCoverConfig() {
+            if (!activeSubj) return;
+            const saved = localStorage.getItem(`coverConfig_${activeSubj.id}`);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    // Migration: if advisor1/advisor2 exist, move to advisors array
+                    if (!parsed.advisors && (parsed.advisor1 || parsed.advisor2)) {
+                        parsed.advisors = [];
+                        if (parsed.advisor1) parsed.advisors.push(parsed.advisor1);
+                        if (parsed.advisor2) parsed.advisors.push(parsed.advisor2);
+                    }
+                    if (!parsed.approvalStatus) parsed.approvalStatus = 'approved';
+                    coverConfig = { ...coverConfig, ...parsed };
+                } catch (e) { }
+            } else {
+                coverConfig = {
+                    school: 'โรงเรียนบ้านขัวก่าย',
+                    office: 'สำนักงานเขตพื้นที่การศึกษาประถมศึกษา สกลนคร เขต 3',
+                    term: '2',
+                    year: '2568',
+                    teacher: 'ครูผู้สอน',
+                    advisors: [],
+                    head: 'หัวหน้ากลุ่มสาระการเรียนรู้',
+                    director: 'ผู้อำนวยการโรงเรียน',
+                    directorTitle: 'ผู้อำนวยการโรงเรียนบ้านขัวก่าย',
+                    approvalStatus: 'approved'
+                };
+            }
+        }
+
+        function renderAdvisorInputs() {
+            const container = document.getElementById('advisors-container');
+            container.innerHTML = (coverConfig.advisors || []).map((name, idx) => `
+                <div class="flex gap-2">
+                    <input type="text" value="${name}" onchange="updateAdvisorValue(${idx}, this.value)"
+                        class="advisor-input flex-1 border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="ชื่อ-นามสกุล ครูที่ปรึกษา">
+                    <button type="button" onclick="removeAdvisorInput(${idx})" 
+                        class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function addAdvisorInput() {
+            if (!coverConfig.advisors) coverConfig.advisors = [];
+            coverConfig.advisors.push('');
+            renderAdvisorInputs();
+        }
+
+        function removeAdvisorInput(idx) {
+            coverConfig.advisors.splice(idx, 1);
+            renderAdvisorInputs();
+        }
+
+        function updateAdvisorValue(idx, val) {
+            coverConfig.advisors[idx] = val;
+        }
+
+        function saveCoverConfig() {
+            coverConfig.school = document.getElementById('cover-school').value;
+            coverConfig.office = document.getElementById('cover-office').value;
+            coverConfig.term = document.getElementById('cover-term').value;
+            coverConfig.year = document.getElementById('cover-year').value;
+            coverConfig.teacher = document.getElementById('cover-teacher').value;
+            coverConfig.head = document.getElementById('cover-head').value;
+            coverConfig.director = document.getElementById('cover-director').value;
+            const directorTitleInput = document.getElementById('cover-director-title');
+            coverConfig.directorTitle = directorTitleInput ? directorTitleInput.value : (coverConfig.directorTitle || '');
+
+            const approvalInput = document.querySelector('input[name="cover-approval"]:checked');
+            coverConfig.approvalStatus = approvalInput ? approvalInput.value : 'approved';
+
+            const hpwInput = document.getElementById('cover-hours-per-week');
+            coverConfig.hoursPerWeek = hpwInput ? parseInt(hpwInput.value) || 2 : 2;
+
+            // Gather advisors from inputs
+            const inputs = document.querySelectorAll('.advisor-input');
+            coverConfig.advisors = Array.from(inputs).map(i => i.value).filter(v => v.trim() !== '');
+
+            if (activeSubj) {
+                localStorage.setItem(`coverConfig_${activeSubj.id}`, JSON.stringify(coverConfig));
+            }
+            closeCoverConfig();
+
+            if (document.getElementById('tab-class-report').classList.contains('active')) {
+                renderClassSummary();
+            }
+        }
+
+        function openCoverConfig() {
+            document.getElementById('cover-school').value = coverConfig.school || '';
+            document.getElementById('cover-office').value = coverConfig.office || '';
+            document.getElementById('cover-term').value = coverConfig.term || '';
+            document.getElementById('cover-year').value = coverConfig.year || '';
+            document.getElementById('cover-teacher').value = coverConfig.teacher || '';
+            renderAdvisorInputs();
+            document.getElementById('cover-head').value = coverConfig.head || '';
+            document.getElementById('cover-director').value = coverConfig.director || '';
+            const directorTitleInput = document.getElementById('cover-director-title');
+            if (directorTitleInput) directorTitleInput.value = coverConfig.directorTitle || '';
+
+            if (coverConfig.approvalStatus === 'disapproved') {
+                document.getElementById('cover-approval-no').checked = true;
+            } else {
+                document.getElementById('cover-approval-yes').checked = true;
+            }
+
+            const hpwInput = document.getElementById('cover-hours-per-week');
+            if (hpwInput) hpwInput.value = coverConfig.hoursPerWeek || 2;
+
+            document.getElementById('coverConfigModal').classList.remove('hidden');
+        }
+
+        function closeCoverConfig() {
+            document.getElementById('coverConfigModal').classList.add('hidden');
+        }
+
         async function loadScoreConfig() {
             if (!activeSubj) {
                 scoreConfig = [...defaultScoreConfig];
@@ -1188,6 +1473,7 @@
             if (!id) return;
             activeSubj = classes.find(c => c.id == id);
             await loadScoreConfig();
+            loadCoverConfig();
             await loadData();
             document.getElementById('status-screen').classList.add('hidden');
             document.getElementById('main-ui').classList.remove('hidden');
@@ -1329,39 +1615,35 @@
 
         function buildAttPages() {
             const MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-
-            // Define Start Date: 3 พฤศจิกายน 2568 (2025-11-03)
             const START_DATE = new Date('2025-11-03T00:00:00');
+            const dayOfWeekSet = new Set();
+            students.forEach(s => s.attendance.filter(a => a.subject_name === activeSubj.subject_name).forEach(a => dayOfWeekSet.add(new Date(a.check_date).getDay())));
+            const meetingDays = [...dayOfWeekSet];
+            if (meetingDays.length === 0) meetingDays.push(1, 2, 3, 4, 5); // default to Mon-Fri if no data yet
 
-            // Build a fixed 20-week calendar (Monday-Friday)
-            const allDates = [];
-            let currDate = new Date(START_DATE);
-            while (allDates.length < 100) { // 20 weeks * 5 days
-                const day = currDate.getDay();
-                if (day >= 1 && day <= 5) { // Skip Sat(6), Sun(0)
-                    // Format as YYYY-MM-DD using local time to avoid UTC offset shifting dates
-                    const y = currDate.getFullYear();
-                    const m = String(currDate.getMonth() + 1).padStart(2, '0');
-                    const d = String(currDate.getDate()).padStart(2, '0');
-                    const dStr = `${y}-${m}-${d}`;
-                    allDates.push(dStr);
-                }
-                currDate.setDate(currDate.getDate() + 1);
-            }
-
-            // Group into weeks of 5 days each
             const weeks = [];
-            for (let i = 0; i < allDates.length; i += 5) weeks.push(allDates.slice(i, i + 5));
+            for (let w = 0; w < 20; w++) {
+                let weekDates = [];
+                for (let d = 0; d < 5; d++) {
+                    let checkDate = new Date(START_DATE);
+                    checkDate.setDate(START_DATE.getDate() + (w * 7) + d);
+                    const y = checkDate.getFullYear();
+                    const m = String(checkDate.getMonth() + 1).padStart(2, '0');
+                    const dt = String(checkDate.getDate()).padStart(2, '0');
+                    weekDates.push(`${y}-${m}-${dt}`);
+                }
+                while (weekDates.length < 5) weekDates.push('');
+                weeks.push(weekDates);
+            }
             const weeks1_10 = weeks.slice(0, 10);
             const weeks11_20 = weeks.slice(10, 20);
 
             function getMonth(d) { return d ? MONTHS[new Date(d).getMonth()] : ''; }
             function getDay(d) { return d ? new Date(d).getDate() : ''; }
 
-            // Build month-spanning header for a group of 10 weeks
             function monthGroups(wks) {
                 const groups = [];
-                wks.forEach((wk, wi) => {
+                wks.forEach((wk) => {
                     const mon = wk[0] ? getMonth(wk[0]) : '';
                     if (groups.length && groups[groups.length - 1].month === mon) {
                         groups[groups.length - 1].span++;
@@ -1372,39 +1654,49 @@
                 return groups;
             }
 
-            function sig3() {
-                return `<div style="display:flex;justify-content:space-around;margin-top:4mm;font-size:8.5pt;">
-                    <div style="text-align:center">ลงชื่อ ...........................................<br><span style="font-size:7pt">(....................................................)</span><br>ตำแหน่ง ครูผู้สอน<br>วันที่ ....../....../....</div>
-                    <div style="text-align:center">ลงชื่อ ...........................................<br><span style="font-size:7pt">(....................................................)</span><br>ตำแหน่ง หัวหน้ากลุ่มสาระการเรียนรู้<br>วันที่ ....../....../....</div>
-                    <div style="text-align:center">ลงชื่อ ...........................................<br><span style="font-size:7pt">(....................................................)</span><br>ตำแหน่ง ผู้อำนวยการโรงเรียน<br>วันที่ ....../....../....</div>
-                </div>`;
-            }
+            function buildAttPage(wks, summaryWks, pageNum, startHour = 1, meetingDays = [1, 2, 3, 4, 5]) {
+                const hpw = coverConfig.hoursPerWeek || 2;
 
-            function buildAttPage(wks, summaryWks, pageNum, totalHoursLabel) {
-                const TOTAL_SLOTS = summaryWks.length * 5; // 50 per page
-                const TOTAL_FULL = TOTAL_SLOTS;
-                const PASS_THRESHOLD = Math.round(TOTAL_FULL * 0.8);
+                // Count actual dates in summaryWks (not empty/undefined) that match meetingDays
+                let actualDaysCount = 0;
+                summaryWks.forEach(w => {
+                    w.forEach(d => {
+                        if (d && meetingDays.includes(new Date(d).getDay())) {
+                            actualDaysCount++;
+                        }
+                    });
+                });
+                const totalSlots = actualDaysCount * hpw;
+                const passThreshold = Math.round(totalSlots * 0.8);
                 const mGroups = monthGroups(wks);
                 const weekStart = pageNum === 2 ? 1 : 11;
+                const cellStyle = 'style="width:1.4%;max-width:3mm;font-size:5pt;padding:0;text-align:center;overflow:hidden;"';
+                const cellHeaderStyle = 'style="width:1.4%;max-width:3mm;font-size:5pt;padding:2px 0;text-align:center;overflow:hidden;"';
+                const rotatedHeaderStyle = 'style="width:1.4%;max-width:3mm;font-size:4.5pt;white-space:nowrap;padding:2px 0;text-align:center;overflow:hidden;writing-mode:vertical-rl;transform:rotate(180deg);"';
 
-                // col widths: narrow attendance cols
-                const CS = `style="width:1.4%;max-width:3mm;font-size:5pt;padding:0;text-align:center;overflow:hidden;"`;
-                const CSH = `style="width:1.4%;max-width:3mm;font-size:5pt;padding:2px 0;text-align:center;overflow:hidden;"`;
+                const monthThs = mGroups.map((g) => `<th colspan="${g.span * 5}" style="background:#d9d9d9;font-size:6pt;white-space:nowrap;padding:1px;">${g.month}</th>`).join('');
+                const weekThs = wks.map((_, i) => `<th colspan="5" style="font-size:6pt;padding:1px;">${weekStart + i}</th>`).join('');
+                const dateThs = wks.map((w) => [0, 1, 2, 3, 4].map((j) => `<th ${cellHeaderStyle}>${w[j] ? getDay(w[j]) : ''}</th>`).join('')).join('');
 
-                let monthThs = mGroups.map(g => `<th colspan="${g.span * 5}" style="background:#d9d9d9;font-size:6pt;white-space:nowrap;padding:1px;">${g.month}</th>`).join('');
-                let weekThs = wks.map((w, i) => `<th colspan="5" style="font-size:6pt;padding:1px;">${weekStart + i}</th>`).join('');
-                let dateThs = wks.map(w => [0, 1, 2, 3, 4].map(j => `<th ${CSH}>${w[j] ? getDay(w[j]) : ''}</th>`).join('')).join('');
-                let hrThs = wks.map((w, i) => [1, 2, 3, 4, 5].map(j => `<th ${CSH}>${j}</th>`).join('')).join('');
+                let currentHour = startHour;
+                const hrThs = wks.map((w) => [0, 1, 2, 3, 4].map((j) => {
+                    if (w[j] && meetingDays.includes(new Date(w[j]).getDay())) {
+                        const endHour = currentHour + hpw - 1;
+                        const hrText = hpw === 1 ? `${currentHour}` : `${currentHour}-${endHour}`;
+                        currentHour += hpw;
+                        return `<th ${rotatedHeaderStyle}>${hrText}</th>`;
+                    }
+                    return `<th ${cellHeaderStyle}></th>`;
+                }).join('')).join('');
 
-                // Student rows
-                const FILL = 0; // Math.max(0, 26 - students.length);
-                let trs = students.map((s, idx) => {
+                let trs = students.map((s) => {
                     const attMap = {};
-                    s.attendance.filter(a => a.subject_name === activeSubj.subject_name).forEach(a => attMap[a.check_date] = a.status);
-                    let cells = wks.map(w => [0, 1, 2, 3, 4].map(j => {
+                    s.attendance.filter((a) => a.subject_name === activeSubj.subject_name).forEach((a) => { attMap[a.check_date] = a.status; });
+                    const cells = wks.map((w) => [0, 1, 2, 3, 4].map((j) => {
                         const date = w[j];
                         const st = date ? (attMap[date] || '') : '';
-                        let ch = '', bg = '';
+                        let ch = '';
+                        let bg = '';
                         if (st === 'A') { ch = 'ข'; bg = 'background:#fca5a5;'; }
                         else if (st === 'L') { ch = 'ล'; bg = 'background:#fde68a;'; }
                         else if (st === 'T') { ch = 'ป'; bg = 'background:#fdba74;'; }
@@ -1413,15 +1705,19 @@
                     }).join('')).join('');
 
                     let kh = 0, la = 0, pa = 0, da = 0;
-                    summaryWks.forEach(w => [0, 1, 2, 3, 4].forEach(j => {
+                    summaryWks.forEach((w) => [0, 1, 2, 3, 4].forEach((j) => {
                         const date = w[j];
-                        const st = date ? (attMap[date] || '') : '';
-                        if (st === 'A') kh++;
-                        else if (st === 'L') la++;
-                        else if (st === 'T') pa++;
-                        else if (st === 'D') da++;
+                        if (date && meetingDays.includes(new Date(date).getDay())) {
+                            const st = attMap[date] || '';
+                            // Count hours missed
+                            if (st === 'A') kh += hpw;
+                            else if (st === 'L') la += hpw;
+                            else if (st === 'T') pa += hpw;
+                            else if (st === 'D') da += hpw;
+                        }
                     }));
-                    const total_att = TOTAL_FULL - kh - la - pa - da;
+                    const totalAtt = totalSlots - kh - la - pa - da;
+
                     return `<tr style="height:6mm;">
                         <td style="font-size:6.5pt;">${s.roll_number}</td>
                         <td style="font-size:6.5pt;text-align:left;padding-left:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${s.name}</td>
@@ -1430,15 +1726,9 @@
                         <td style="font-size:6pt;padding:0;">${la || ''}</td>
                         <td style="font-size:6pt;padding:0;">${pa || ''}</td>
                         <td style="font-size:6pt;padding:0;">${da || ''}</td>
-                        <td style="font-size:6pt;font-weight:bold;padding:0;">${total_att}</td>
+                        <td style="font-size:6pt;font-weight:bold;padding:0;">${totalAtt}</td>
                     </tr>`;
                 }).join('');
-                for (let i = 0; i < FILL; i++) {
-                    const emptyCells = wks.map(w => '<td></td><td></td><td></td><td></td><td></td>').join('');
-                    trs += `<tr style="height:6mm;"><td style="font-size:6.5pt;">${students.length + i + 1}</td><td></td>${emptyCells}<td></td><td></td><td></td><td></td><td></td></tr>`;
-                }
-
-                const summaryLabel = pageNum === 2 ? 'กลางภาค' : 'รายภาค';
 
                 return `<div class="pp5-page portrait">
                     <div style="font-size:8pt;margin-bottom:1mm;display:flex;justify-content:space-between;">
@@ -1457,27 +1747,35 @@
                                 <th rowspan="4" style="font-size:6.5pt;padding:0;">เลขที่</th>
                                 <th rowspan="4" style="font-size:6.5pt;padding:0;">ชื่อ  -  สกุล</th>
                                 ${monthThs}
-                                <th colspan="4" rowspan="2" style="background:#d9d9d9;font-size:6pt;padding:0;">${summaryLabel}</th>
-                                <th rowspan="4" style="background:#92d050;font-size:6pt;padding:0;">รวม<br>${TOTAL_FULL}</th>
+                                <th colspan="4" rowspan="2" style="background:#d9d9d9;font-size:6pt;padding:0;">${pageNum === 2 ? 'กลางภาค' : 'รายภาค'}</th>
+                                <th rowspan="2" style="background:#92d050;font-size:6pt;padding:0;">รวม<br>${totalSlots}</th>
                             </tr>
                             <tr>${weekThs}</tr>
                             <tr>
                                 ${dateThs}
-                                <th style="font-size:5.5pt;padding:0;">ข</th>
-                                <th style="font-size:5.5pt;padding:0;">ล</th>
-                                <th style="font-size:5.5pt;padding:0;">ป</th>
-                                <th style="font-size:5.5pt;padding:0;">ด</th>
+                                <th rowspan="2" style="font-size:5.5pt;padding:0;background:#d9d9d9;">ข</th>
+                                <th rowspan="2" style="font-size:5.5pt;padding:0;background:#d9d9d9;">ล</th>
+                                <th rowspan="2" style="font-size:5.5pt;padding:0;background:#d9d9d9;">ป</th>
+                                <th rowspan="2" style="font-size:5.5pt;padding:0;background:#d9d9d9;">ด</th>
+                                <th rowspan="2" style="font-size:5.5pt;padding:0;white-space:nowrap;background:#92d050;">เต็ม ${totalSlots}<br>ผ่าน ${passThreshold}</th>
                             </tr>
                             <tr>
                                 ${hrThs}
-                                <th colspan="4" style="font-size:5.5pt;padding:0;white-space:nowrap;">เต็ม ${TOTAL_FULL}<br>ผ่าน ${PASS_THRESHOLD}</th>
                             </tr>
                         </thead>
                         <tbody>${trs}</tbody>
                     </table>
                 </div>`;
             }
-            return buildAttPage(weeks1_10, weeks1_10, 2, 40) + buildAttPage(weeks11_20, weeks, 3, 80);
+
+            let startHourPage2 = 1;
+            weeks1_10.forEach(w => w.forEach(d => {
+                if (d && meetingDays.includes(new Date(d).getDay())) {
+                    startHourPage2 += (coverConfig.hoursPerWeek || 2);
+                }
+            }));
+
+            return buildAttPage(weeks1_10, weeks1_10, 2, 1, meetingDays) + buildAttPage(weeks11_20, weeks, 3, startHourPage2, meetingDays);
         }
 
         function renderClassSummary() {
@@ -1554,141 +1852,118 @@
             const avgG = students.length ? (sumG / students.length).toFixed(2) : '0.00';
 
             // Attendance date grouping
-            const dateSet = new Set();
-            students.forEach(s => s.attendance.filter(a => a.subject_name === activeSubj.subject_name).forEach(a => dateSet.add(a.check_date)));
-            const allDates = [...dateSet].sort();
+            const START_DATE = new Date('2025-11-03T00:00:00');
+            const dayOfWeekSet = new Set();
+            students.forEach(s => s.attendance.filter(a => a.subject_name === activeSubj.subject_name).forEach(a => dayOfWeekSet.add(new Date(a.check_date).getDay())));
+            const meetingDays = [...dayOfWeekSet];
+            if (meetingDays.length === 0) meetingDays.push(1, 2, 3, 4, 5); // default to Mon-Fri if no data yet
+
             const weeks = [];
-            for (let i = 0; i < allDates.length; i += 5) weeks.push(allDates.slice(i, i + 5));
-            while (weeks.length < 20) weeks.push([]);
+            for (let w = 0; w < 20; w++) {
+                let weekDates = [];
+                for (let d = 0; d < 5; d++) {
+                    let checkDate = new Date(START_DATE);
+                    checkDate.setDate(START_DATE.getDate() + (w * 7) + d);
+                    const y = checkDate.getFullYear();
+                    const m = String(checkDate.getMonth() + 1).padStart(2, '0');
+                    const dt = String(checkDate.getDate()).padStart(2, '0');
+                    weekDates.push(`${y}-${m}-${dt}`);
+                }
+                while (weekDates.length < 5) weekDates.push('');
+                weeks.push(weekDates);
+            }
+            const weeks1_10 = weeks.slice(0, 10);
+            const weeks11_20 = weeks.slice(10, 20);
 
             function sig3() {
                 return `<div style="display:flex;justify-content:space-around;margin-top:4mm;font-size:8.5pt;">
-                    <div style="text-align:center;">ลงชื่อ ...........................................<br><span style="font-size:7pt">(....................................................)</span><br>ตำแหน่ง ครูผู้สอน<br>วันที่ ....../....../....</div>
-                    <div style="text-align:center;">ลงชื่อ ...........................................<br><span style="font-size:7pt">(....................................................)</span><br>ตำแหน่ง หัวหน้ากลุ่มสาระการเรียนรู้<br>วันที่ ....../....../....</div>
-                    <div style="text-align:center;">ลงชื่อ ...........................................<br><span style="font-size:7pt">(....................................................)</span><br>ตำแหน่ง ผู้อำนวยการโรงเรียน<br>วันที่ ....../....../....</div>
+                    <div style="text-align:center;">ลงชื่อ ...........................................<br><span style="font-size:7pt">(${coverConfig.teacher})</span><br>ตำแหน่ง ครูผู้สอน<br>วันที่ ....../....../....</div>
+                    <div style="text-align:center;">ลงชื่อ ...........................................<br><span style="font-size:7pt">(${coverConfig.head})</span><br>ตำแหน่ง หัวหน้ากลุ่มสาระการเรียนรู้<br>วันที่ ....../....../....</div>
+                    <div style="text-align:center;">ลงชื่อ ...........................................<br><span style="font-size:7pt">(${coverConfig.director})</span><br>ตำแหน่ง ${coverConfig.directorTitle || 'ผู้อำนวยการโรงเรียน'}<br>วันที่ ....../....../....</div>
                 </div>`;
             }
 
             // ================================================
-            // PAGE 1: ปก (portrait)
+            // PAGE 1: ปก (1) 
             // ================================================
-            const coverPage = `<div class="pp5-page portrait">
-                <div style="text-align:center;margin-bottom:8mm;">
-                    <div style="font-size:22pt;font-weight:bold;line-height:1.3;">สมุดบันทึกผลการพัฒนาคุณภาพผู้เรียนรายวิชา (ปพ.5)</div>
-                    <div style="font-size:15pt;font-weight:bold;margin-top:3mm;">โรงเรียน..........................................................................</div>
-                    <div style="font-size:14pt;margin-top:2mm;">อำเภอ.............................. จังหวัด................................</div>
-                    <div style="font-size:13pt;margin-top:1mm;">สังกัด สำนักงานคณะกรรมการการศึกษาขั้นพื้นฐาน กระทรวงศึกษาธิการ</div>
-                </div>
-                <table style="width:100%;font-size:14pt;border-collapse:collapse;margin-bottom:5mm;">
-                    <tr><td style="padding:2mm 0;width:38%;">ระดับชั้น <u><b>${activeSubj.grade_level}</b></u></td>
-                        <td style="padding:2mm 0;">ภาคเรียนที่ <u><b>2</b></u></td>
-                        <td style="padding:2mm 0;">ปีการศึกษา <u><b>2568</b></u></td></tr>
-                    <tr><td colspan="2">รายวิชา <u><b>${activeSubj.subject_name}</b></u></td>
-                        <td>รหัสวิชา <u><b>${activeSubj.subject_code || '-'}</b></u></td></tr>
-                    <tr><td>เวลาเรียน <u>.........</u> ชั่วโมง/สัปดาห์</td>
-                        <td colspan="2">จำนวนหน่วยกิต <u>.........</u> หน่วยกิต</td></tr>
-                    <tr><td colspan="3">ครูผู้สอน <u>..................................................................................</u></td></tr>
-                    <tr><td colspan="3">ครูที่ปรึกษา <u>................................................................................</u></td></tr>
+            const coverPage = `<div class="pp5-page portrait" style="font-family: 'TH Sarabun New', 'IBM Plex Sans Thai', 'Sarabun', sans-serif;">
+                <table style="width:100%; border-collapse:collapse; font-size:14pt; border:none; margin-bottom:5mm;">
+                    <tr><td colspan="4" style="text-align:center; font-size:16pt; font-weight:bold; padding-bottom:5mm;">
+                        ${coverConfig.school || 'โรงเรียนบ้านขัวก่าย'}<br>
+                        สมุดบันทึกผลการพัฒนาผู้เรียนรายวิชา<br>
+                        ตามหลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พุทธศักราช 2551<br>
+                        ${coverConfig.office || 'สำนักงานเขตพื้นที่การศึกษาประถมศึกษา สกลนคร เขต 3'}
+                    </td></tr>
+                    <tr><td style="width:25%;"></td><td style="width:25%;"></td><td style="width:25%;"></td><td style="width:25%;"></td></tr>
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:2mm; font-size:14pt;">
+                            ระดับชั้น ${activeSubj.grade_level}  ภาคเรียนที่ ${coverConfig.term}  ปีการศึกษา ${coverConfig.year}<br>
+                            ชื่อวิชา ${activeSubj.subject_name} รหัสวิชา ${activeSubj.subject_code || '-'}<br>
+                        </td>
+                    </tr>
+                    <tr><td colspan="4" style="text-align:center; padding:4mm 2mm; font-size:14pt;">
+                            ครูผู้สอน ${coverConfig.teacher}<br>
+                            ครูที่ปรึกษา ${(coverConfig.advisors || []).join('  และ  ') || '-'}<br>
+                    </td></tr>
                 </table>
-
-                <div style="display:flex;gap:5mm;margin-bottom:4mm;align-items:flex-start;">
-                    <div style="border:1px solid #000;padding:3mm;text-align:center;font-size:12pt;min-width:28mm;">
-                        จำนวนนักเรียน<br>ทั้งหมด<br>
-                        <span style="font-size:20pt;font-weight:bold;">${students.length}</span><br>คน
-                    </div>
-                    <div style="flex:1;">
-                        <div style="text-align:center;font-weight:bold;font-size:12pt;margin-bottom:1mm;">สรุปผลการเรียน</div>
-                        <table class="pp5-t" style="font-size:10pt;">
-                            <tr>
-                                <th colspan="8" style="background:#d9d9d9;">จำนวนนักเรียนที่ได้ระดับผลการเรียน</th>
-                                <th colspan="3" style="background:#d9d9d9;">นักเรียนที่มีผล</th>
-                                <th style="background:#d9d9d9;">ผลการเรียน<br>เฉลี่ย (X̄)</th>
-                                <th style="background:#d9d9d9;">ค่าเบี่ยงเบน<br>มาตรฐาน (SD)</th>
-                            </tr>
-                            <tr>
-                                <th>4</th><th>3.5</th><th>3</th><th>2.5</th>
-                                <th>2</th><th>1.5</th><th>1</th><th>0</th>
-                                <th>ร</th><th>มส.</th><th>มก</th>
-                                <th></th><th></th>
-                            </tr>
-                            <tr>
-                                <td>${GC['4'] || 0}</td><td>${GC['3.5'] || 0}</td><td>${GC['3'] || 0}</td><td>${GC['2.5'] || 0}</td>
-                                <td>${GC['2'] || 0}</td><td>${GC['1.5'] || 0}</td><td>${GC['1'] || 0}</td><td>${GC['0'] || 0}</td>
-                                <td>0</td><td>0</td><td>0</td>
-                                <td><b>${avgG}</b></td><td></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-
-                <div style="margin-bottom:4mm;">
-                    <table class="pp5-t" style="font-size:9pt;">
-                        <tr>
-                            <th rowspan="2" style="background:#d9d9d9;width:28mm;">จำนวนนักเรียน<br>ทั้งหมด</th>
-                            <th colspan="8" style="background:#d9d9d9;">ผลการประเมินคุณลักษณะอันพึงประสงค์</th>
-                            <th colspan="8" style="background:#d9d9d9;">ผลการประเมินการอ่าน คิดวิเคราะห์ และเขียนสื่อความ</th>
-                        </tr>
-                        <tr>
-                            <th colspan="2">3 (ดีเยี่ยม)</th><th colspan="2">2 (ดี)</th>
-                            <th colspan="2">1 (ผ่าน)</th><th colspan="2">0 (ไม่ผ่าน)</th>
-                            <th colspan="2">3 (ดีเยี่ยม)</th><th colspan="2">2 (ดี)</th>
-                            <th colspan="2">1 (ผ่าน)</th><th colspan="2">0 (ไม่ผ่าน)</th>
-                        </tr>
-                        <tr>
-                            <td>${students.length}</td>
-                            <td colspan="2"></td><td colspan="2"></td><td colspan="2"></td><td colspan="2"></td>
-                            <td colspan="2"></td><td colspan="2"></td><td colspan="2"></td><td colspan="2"></td>
-                        </tr>
+                <br>
+                <div style="font-weight:bold; margin-bottom:2mm;">แสดงสถิติ..........</div>
+                <table class="pp5-t" style="width:100%; border-collapse:collapse; text-align:center; font-size:12pt;">
+                    <tr>
+                        <th rowspan="2" style="border:1px solid #000; width:20%;">จำนวน<br>นักเรียนเรียน<br>ทั้งสิ้น (คน)</th>
+                        <th colspan="8" style="border:1px solid #000;">จำนวนนักเรียนที่ได้ระดับผลการเรียน</th>
+                        <th colspan="3" style="border:1px solid #000;">นักเรียนที่มีผล<br>การเรียนอื่น</th>
+                    </tr>
+                    <tr>
+                        <th style="border:1px solid #000;width:6%;">4</th><th style="border:1px solid #000;width:6%;">3.5</th>
+                        <th style="border:1px solid #000;width:6%;">3</th><th style="border:1px solid #000;width:6%;">2.5</th>
+                        <th style="border:1px solid #000;width:6%;">2</th><th style="border:1px solid #000;width:6%;">1.5</th>
+                        <th style="border:1px solid #000;width:6%;">1</th><th style="border:1px solid #000;width:6%;">0</th>
+                        <th style="border:1px solid #000;width:6%;">ร</th><th style="border:1px solid #000;width:6%;">มส.</th><th style="border:1px solid #000;width:6%;">มก</th>
+                    </tr>
+                    <tr>
+                        <td style="border:1px solid #000; font-size:14pt; font-weight:bold;">${students.length}</td>
+                        <td style="border:1px solid #000;">${GC['4'] || ''}</td><td style="border:1px solid #000;">${GC['3.5'] || ''}</td>
+                        <td style="border:1px solid #000;">${GC['3'] || ''}</td><td style="border:1px solid #000;">${GC['2.5'] || ''}</td>
+                        <td style="border:1px solid #000;">${GC['2'] || ''}</td><td style="border:1px solid #000;">${GC['1.5'] || ''}</td>
+                        <td style="border:1px solid #000;">${GC['1'] || ''}</td><td style="border:1px solid #000;">${GC['0'] || ''}</td>
+                        <td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td>
+                    </tr>
+                </table>
+                <br>
+                <div style="font-weight:bold; margin-bottom:2mm;">แสดงสถิติ สรุปผลการประเมินคุณลักษณะอันพึงประสงค์ และ อ่าน คิดวิเคราะห์ และเขียนสื่อความ</div>
+                <table class="pp5-t" style="width:100%; border-collapse:collapse; text-align:center; font-size:12pt;">
+                    <tr>
+                        <th rowspan="2" style="border:1px solid #000; width:20%;">จำนวน<br>นักเรียนเรียน<br>ทั้งสิ้น (คน)</th>
+                        <th colspan="4" style="border:1px solid #000;">ผลการประเมินการอ่าน คิด วิเคราะห์ และเขียนสื่อความ</th>
+                        <th colspan="4" style="border:1px solid #000;">ผลการประเมินคุณลักษณะอันพึงประสงค์</th>
+                    </tr>
+                    <tr>
+                        <th style="border:1px solid #000;width:10%;">ดีเยี่ยม (3)</th><th style="border:1px solid #000;width:10%;">ดี (2)</th>
+                        <th style="border:1px solid #000;width:10%;">ผ่าน (1)</th><th style="border:1px solid #000;width:10%;">ไม่ผ่าน (0)</th>
+                        <th style="border:1px solid #000;width:10%;">ดีเยี่ยม (3)</th><th style="border:1px solid #000;width:10%;">ดี (2)</th>
+                        <th style="border:1px solid #000;width:10%;">ผ่าน (1)</th><th style="border:1px solid #000;width:10%;">ไม่ผ่าน (0)</th>
+                    </tr>
+                    <tr>
+                        <td style="border:1px solid #000; font-size:14pt; font-weight:bold;">${students.length}</td>
+                        <td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td>
+                        <td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td>
+                    </tr>
+                </table>
+                <br><br>
+                <div style="display:flex; justify-content:flex-end; padding-right:15mm; margin-top:10mm;">
+                    <table style="text-align:left; font-size:14pt; margin-bottom: 5mm;">
+                        <tr><td style="width: 30px; text-align: center; border: 1px solid #000;">${coverConfig.approvalStatus === 'approved' ? '✓' : ''}</td><td style="padding-left: 5px;">อนุมัติผลการเรียน</td></tr>
+                        <tr><td style="width: 30px; text-align: center; border: 1px solid #000;">${coverConfig.approvalStatus === 'disapproved' ? '✓' : ''}</td><td style="padding-left: 5px;">ไม่อนุมัติผลการเรียน</td></tr>
                     </table>
                 </div>
-
-                <div style="margin-top:6mm;font-size:11pt;line-height:1.2;">
-                    <div style="font-weight:bold;margin-bottom:2mm;font-size:12pt;">อนุมัติผลการเรียน</div>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:4mm;">
-                        <table style="border:none; border-collapse:collapse; margin:0;">
-                            <tr><td style="text-align:right; vertical-align:top; padding-top:2px;">ลงชื่อ</td>
-                                <td style="text-align:center; padding:0 2px;">..........................................<br>(............................................)<br>วันที่ ....../....../....</td>
-                                <td style="text-align:left; vertical-align:top; padding-top:2px;">ครูผู้สอน</td></tr>
-                        </table>
-                        <table style="border:none; border-collapse:collapse; margin:0;">
-                            <tr><td style="text-align:right; vertical-align:top; padding-top:2px;">ลงชื่อ</td>
-                                <td style="text-align:center; padding:0 2px;">..........................................<br>(............................................)<br>วันที่ ....../....../....</td>
-                                <td style="text-align:left; vertical-align:top; padding-top:2px;">หัวหน้ากลุ่มสาระการเรียนรู้</td></tr>
-                        </table>
-                    </div>
-                    <div style="margin-bottom:3mm;">
-                        <table style="border:none; border-collapse:collapse; margin:0 auto;">
-                            <tr><td style="text-align:right; vertical-align:top; padding-top:2px;">ลงชื่อ</td>
-                                <td style="text-align:center; padding:0 2px;">..........................................<br>(............................................)<br>วันที่ ....../....../....</td>
-                                <td style="text-align:left; vertical-align:top; padding-top:2px;">เจ้าหน้าที่วัดผลและประเมินผล</td></tr>
-                        </table>
-                    </div>
-                    <div style="margin-bottom:4mm;">
-                        <table style="border:none; border-collapse:collapse; margin:0 auto;">
-                            <tr><td style="text-align:right; vertical-align:top; padding-top:2px;">ลงชื่อ</td>
-                                <td style="text-align:center; padding:0 2px;">..........................................<br>(............................................)<br>วันที่ ....../....../....</td>
-                                <td style="text-align:left; vertical-align:top; padding-top:2px;">หัวหน้ากลุ่มงานวิชาการ</td></tr>
-                        </table>
-                    </div>
-                    <div style="text-align:center;font-weight:bold;margin-bottom:2mm;font-size:12pt;">เรียนเสนอเพื่อพิจารณา</div>
-                    <div style="margin-bottom:2mm;">
-                        <table style="border:none; border-collapse:collapse; margin:0 auto;">
-                            <tr><td style="text-align:right; vertical-align:top; padding-top:2px;">ลงชื่อ</td>
-                                <td style="text-align:center; padding:0 2px;">..........................................<br>(............................................)<br>วันที่ ....../....../....</td>
-                                <td style="text-align:left; vertical-align:top; padding-top:2px;">รองผู้อำนวยการโรงเรียน</td></tr>
-                        </table>
-                    </div>
-                    <div style="text-align:center;margin-bottom:3mm;font-size:13pt;">
-                        <span style="margin-right:20mm;">☐ อนุมัติ</span>
-                        <span>☐ ไม่อนุมัติ</span>
-                    </div>
-                    <div style="margin-bottom:2mm;">
-                        <table style="border:none; border-collapse:collapse; margin:0 auto;">
-                            <tr><td style="text-align:right; vertical-align:top; padding-top:2px;">ลงชื่อ</td>
-                                <td style="text-align:center; padding:0 2px;">..........................................<br>(............................................)<br>วันที่ ....../....../....</td>
-                                <td style="text-align:left; vertical-align:top; padding-top:2px;">ผู้อำนวยการโรงเรียน</td></tr>
-                        </table>
-                    </div>
+                <div style="display:flex; justify-content:flex-end; padding-right:15mm;">
+                    <table style="text-align:center; font-size:14pt;">
+                        <tr><td>ลงชื่อ ${coverConfig.director}</td></tr>
+                        <tr><td>( ${coverConfig.director} )</td></tr>
+                        <tr><td>${coverConfig.directorTitle}</td></tr>
+                        <tr><td>........./........./.........</td></tr>
+                    </table>
                 </div>
             </div>`;
 
@@ -1747,8 +2022,8 @@
                     }).join('');
                 }
 
-                return `<div class="pp5-page portrait">
-                    <table class="pp5-t" style="font-size:9pt;table-layout:fixed;width:100%;">
+                return `<div class="pp5-page portrait" style="font-family: 'TH Sarabun New', 'IBM Plex Sans Thai', 'Sarabun', sans-serif;">
+                    <table class="pp5-t" style="font-size:10pt;table-layout:fixed;width:100%;">
                         <colgroup>
                             <col style="width:6%;">
                             <col style="width:23%;">
@@ -1791,14 +2066,14 @@
                 return { h1, h2 };
             }
             const uh = unitColHeader();
-            const summaryPage = `<div class="pp5-page portrait">
-                <div style="text-align:center;font-weight:bold;font-size:11pt;margin-bottom:2mm;">สรุปผลการประเมินคุณภาพผู้เรียน</div>
+            const summaryPage = `<div class="pp5-page portrait" style="font-family: 'TH Sarabun New', 'IBM Plex Sans Thai', 'Sarabun', sans-serif;">
+                <div style="text-align:center;font-weight:bold;font-size:12pt;margin-bottom:2mm;">สรุปผลการประเมินคุณภาพผู้เรียน</div>
                 <div style="font-size:8.5pt;margin-bottom:2mm;">
                     วิชา <b>${activeSubj.subject_name}</b> &nbsp; รหัส <b>${activeSubj.subject_code || ''}</b> &nbsp;
-                    ชั้น <b>${activeSubj.grade_level}</b> &nbsp; ภาคเรียนที่ <b>2</b> &nbsp;
-                    ปีการศึกษา <b>2568</b> &nbsp; จำนวนนักเรียน <b>${students.length}</b> คน
+                    ชั้น <b>${activeSubj.grade_level}</b> &nbsp; ภาคเรียนที่ <b>${coverConfig.term}</b> &nbsp;
+                    ปีการศึกษา <b>${coverConfig.year}</b> &nbsp; จำนวนนักเรียน <b>${students.length}</b> คน
                 </div>
-                <table class="pp5-t" style="font-size:9pt;table-layout:fixed;width:100%;">
+                <table class="pp5-t" style="font-size:10pt;table-layout:fixed;width:100%;">
                     <colgroup>
                         <col style="width:5%;">
                         <col style="width:20%;">
@@ -1856,20 +2131,20 @@
             // PAGE 9: คุณลักษณะอันพึงประสงค์
             // ================================================
             const CHAR_TRAITS = [
-                { name: '1. รักชาติ ศาสน์ กษัตริย์', sub: 4 },
-                { name: '2. ซื่อสัตย์สุจริต', sub: 2 },
-                { name: '3. วินัย', sub: 1 },
-                { name: '4. ใฝ่เรียนรู้', sub: 2 },
-                { name: '5. อยู่อย่างพอเพียง', sub: 2 },
-                { name: '6. มุ่งมั่นในการทำงาน', sub: 2 },
-                { name: '7. รักความเป็นไทย', sub: 3 },
-                { name: '8. มีจิตสาธารณะ', sub: 2 },
+                { id: 't1', name: '1. รักชาติ ศาสน์ กษัตริย์', sub: 4 },
+                { id: 't2', name: '2. ซื่อสัตย์สุจริต', sub: 2 },
+                { id: 't3', name: '3. วินัย', sub: 1 },
+                { id: 't4', name: '4. ใฝ่เรียนรู้', sub: 2 },
+                { id: 't5', name: '5. อยู่อย่างพอเพียง', sub: 2 },
+                { id: 't6', name: '6. มุ่งมั่นในการทำงาน', sub: 2 },
+                { id: 't7', name: '7. รักความเป็นไทย', sub: 3 },
+                { id: 't8', name: '8. มีจิตสาธารณะ', sub: 2 },
             ];
             const FILL9 = 0; // Math.max(0, 26 - students.length);
-            const charPage = `<div class="pp5-page portrait">
-                <div style="text-align:center;font-weight:bold;font-size:11pt;margin-bottom:1mm;">สรุปผลการประเมินคุณภาพผู้เรียน</div>
+            const charPage = `<div class="pp5-page portrait" style="font-family: 'TH Sarabun New', 'IBM Plex Sans Thai', 'Sarabun', sans-serif;">
+                <div style="text-align:center;font-weight:bold;font-size:12pt;margin-bottom:1mm;">สรุปผลการประเมินคุณภาพผู้เรียน</div>
                 <div style="text-align:center;font-size:9pt;margin-bottom:2mm;">คุณลักษณะอันพึงประสงค์ (จำนวนครั้งที่ประเมิน - สอดคล้องกับโปรแกรม BookMark)</div>
-                <table class="pp5-t" style="font-size:8pt;table-layout:fixed;width:100%;">
+                <table class="pp5-t" style="font-size:10pt;table-layout:fixed;width:100%;">
                     <colgroup>
                         <col style="width:5%;">
                         <col style="width:18%;">
@@ -1902,17 +2177,24 @@
                     <tbody>
                         ${students.map(s => {
                 const d = getSData(s);
+                let traitTotal = 0; let traitHasData = false;
+                const traitCells = CHAR_TRAITS.map(t => {
+                    const val = d[t.id] !== undefined ? d[t.id] : '';
+                    if (val !== '') { traitTotal += parseInt(val); traitHasData = true; }
+                    if (t.sub > 1) {
+                        return Array(t.sub).fill(`<td>${val}</td>`).join('') + `<td style="font-weight:bold;">${val}</td>`;
+                    }
+                    return `<td style="font-weight:bold;">${val}</td>`;
+                }).join('');
+                let traitSummary = '';
+                if (traitHasData) {
+                    traitSummary = (traitTotal / CHAR_TRAITS.length).toFixed(1);
+                }
                 return `<tr style="height:6mm;">
                             <td style="font-size:8.5pt;">${s.roll_number}</td>
                             <td style="font-size:8.5pt;text-align:left;padding-left:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${s.name}</td>
-                            ${CHAR_TRAITS.map(t => {
-                    const val = d[t.id] !== undefined ? d[t.id] : '';
-                    if (t.sub > 1) {
-                        return Array(t.sub).fill(`<td></td>`).join('') + `<td style="font-weight:bold;">${val}</td>`;
-                    }
-                    return `<td style="font-weight:bold;">${val}</td>`;
-                }).join('')}
-                            <td></td>
+                            ${traitCells}
+                            <td style="font-size:8.5pt;font-weight:bold;">${traitSummary}</td>
                         </tr>`;
             }).join('')}
                         ${Array(FILL9).fill(0).map((_, i) => `<tr style="height:6mm;">
@@ -1928,17 +2210,17 @@
             // PAGE 10: อ่าน-คิด-เขียน
             // ================================================
             const READ_SKILLS = [
-                { name: 'การคัดสรรสื่อ', sub: 3 },
-                { name: 'จับประเด็นสำคัญ', sub: 3 },
-                { name: 'วิเคราะห์ วิจารณ์', sub: 3 },
-                { name: 'สรุปคุณค่า แง่คิดที่ดี', sub: 3 },
-                { name: 'สรุปอภิปรายขยายความ', sub: 3 },
+                { id: 'r1', name: 'การคัดสรรสื่อ', sub: 3 },
+                { id: 'r2', name: 'จับประเด็นสำคัญ', sub: 3 },
+                { id: 'r3', name: 'วิเคราะห์ วิจารณ์', sub: 3 },
+                { id: 'r4', name: 'สรุปคุณค่า แง่คิดที่ดี', sub: 3 },
+                { id: 'r5', name: 'สรุปอภิปรายขยายความ', sub: 3 },
             ];
             const FILL10 = 0; // Math.max(0, 26 - students.length);
-            const readPage = `<div class="pp5-page portrait">
-                <div style="text-align:center;font-weight:bold;font-size:11pt;margin-bottom:1mm;">สรุปผลการประเมินคุณภาพผู้เรียน</div>
+            const readPage = `<div class="pp5-page portrait" style="font-family: 'TH Sarabun New', 'IBM Plex Sans Thai', 'Sarabun', sans-serif;">
+                <div style="text-align:center;font-weight:bold;font-size:12pt;margin-bottom:1mm;">สรุปผลการประเมินคุณภาพผู้เรียน</div>
                 <div style="text-align:center;font-size:9pt;margin-bottom:2mm;">การอ่าน  การคิดวิเคราะห์  และเขียนสื่อความ</div>
-                <table class="pp5-t" style="font-size:8pt;table-layout:fixed;width:100%;">
+                <table class="pp5-t" style="font-size:10pt;table-layout:fixed;width:100%;">
                     <colgroup>
                         <col style="width:5%;">
                         <col style="width:20%;">
@@ -1969,20 +2251,16 @@
                 let hasData = false;
 
                 const cells = READ_SKILLS.map(sk => {
-                    // Check if old data structure (r1, r2, r3, r4, r5) exists
-                    const val = d[sk.id !== undefined ? sk.id : sk.name] !== undefined ? d[sk.id !== undefined ? sk.id : sk.name] : '';
+                    const val = d[sk.id] !== undefined ? d[sk.id] : '';
                     if (val !== '') {
                         totalScore += parseInt(val);
                         hasData = true;
                     }
-                    return `<td></td><td></td><td></td><td style="font-weight:bold;">${val}</td>`;
+                    return `<td>${val}</td><td>${val}</td><td>${val}</td><td style="font-weight:bold;">${val}</td>`;
                 }).join('');
 
                 if (hasData) {
-                    const pct = (totalScore / totalMax) * 100;
-                    if (pct >= 80) summary = 'ดีเยี่ยม';
-                    else if (pct >= 50) summary = 'ดี';
-                    else summary = 'ผ่าน';
+                    summary = (totalScore / READ_SKILLS.length).toFixed(1);
                 }
 
                 return `<tr style="height:6.5mm;">
@@ -2247,8 +2525,9 @@
         function renderTraits() {
             const thead = document.getElementById('traits-thead');
             thead.innerHTML = `<tr>
-                <th class="p-2 w-10 text-xs text-center sticky left-0 bg-slate-50 z-10 border-r border-slate-200">ที่</th>
-                <th class="text-left p-2 text-xs sticky left-10 bg-slate-50 z-10 border-r border-slate-200 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.1)]">ชื่อ-นามสกุล</th>
+                <th class="p-2 w-8 text-xs text-center sticky left-0 bg-slate-50 z-10 border-r border-slate-200"><input type="checkbox" checked onchange="toggleAllTraitsCheck(this.checked)" class="w-4 h-4 accent-amber-500 cursor-pointer" title="เลือกทั้งหมด"></th>
+                <th class="p-2 w-10 text-xs text-center sticky left-8 bg-slate-50 z-10 border-r border-slate-200">ที่</th>
+                <th class="text-left p-2 text-xs sticky left-[4.5rem] bg-slate-50 z-10 border-r border-slate-200 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.1)]">ชื่อ-นามสกุล</th>
                 ${CHAR_TRAITS.map(t => `<th class="p-2 w-16 border-l border-slate-200 min-w-[4rem] align-bottom"><div class="writing-vertical text-left mx-auto text-slate-500" style="writing-mode: vertical-rl; transform: rotate(180deg); height: 110px; font-size: 13px; font-weight: 800; line-height: 1;">${t.name}</div></th>`).join('')}
                 <th class="p-2 w-4"></th>
             </tr>`;
@@ -2276,8 +2555,9 @@
                 }).join('');
 
                 return `<tr data-row-id="${s.id}" class="hover:bg-slate-50/50 transition-colors group">
-                    <td class="p-2 text-slate-400 font-medium text-xs text-center sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-colors">${s.roll_number}</td>
-                    <td class="text-left font-bold text-slate-700 p-2 text-sm whitespace-nowrap sticky left-10 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.05)] transition-colors">${s.name}</td>
+                    <td class="p-2 text-center sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-colors"><input type="checkbox" checked class="trait-check w-4 h-4 accent-amber-500 cursor-pointer" data-student-id="${s.id}"></td>
+                    <td class="p-2 text-slate-400 font-medium text-xs text-center sticky left-8 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-colors">${s.roll_number}</td>
+                    <td class="text-left font-bold text-slate-700 p-2 text-sm whitespace-nowrap sticky left-[4.5rem] bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.05)] transition-colors">${s.name}</td>
                     ${cells}
                     <td class="p-2"></td>
                 </tr>`;
@@ -2287,8 +2567,9 @@
         function renderReading() {
             const thead = document.getElementById('reading-thead');
             thead.innerHTML = `<tr>
-                <th class="p-2 w-10 text-xs text-center sticky left-0 bg-slate-50 z-10 border-r border-slate-200">ที่</th>
-                <th class="text-left p-2 text-xs sticky left-10 bg-slate-50 z-10 border-r border-slate-200 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.1)]">ชื่อ-นามสกุล</th>
+                <th class="p-2 w-8 text-xs text-center sticky left-0 bg-slate-50 z-10 border-r border-slate-200"><input type="checkbox" checked onchange="toggleAllReadingCheck(this.checked)" class="w-4 h-4 accent-teal-500 cursor-pointer" title="เลือกทั้งหมด"></th>
+                <th class="p-2 w-10 text-xs text-center sticky left-8 bg-slate-50 z-10 border-r border-slate-200">ที่</th>
+                <th class="text-left p-2 text-xs sticky left-[4.5rem] bg-slate-50 z-10 border-r border-slate-200 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.1)]">ชื่อ-นามสกุล</th>
                 ${READ_SKILLS.map(r => `<th class="p-2 w-16 border-l border-slate-200 min-w-[4rem] align-bottom"><div class="writing-vertical text-left mx-auto text-slate-500" style="writing-mode: vertical-rl; transform: rotate(180deg); height: 110px; font-size: 13px; font-weight: 800; line-height: 1;">${r.name}</div></th>`).join('')}
                 <th class="p-2 w-4"></th>
             </tr>`;
@@ -2316,12 +2597,76 @@
                 }).join('');
 
                 return `<tr data-row-id="${s.id}" class="hover:bg-slate-50/50 transition-colors group">
-                    <td class="p-2 text-slate-400 font-medium text-xs text-center sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-colors">${s.roll_number}</td>
-                    <td class="text-left font-bold text-slate-700 p-2 text-sm whitespace-nowrap sticky left-10 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.05)] transition-colors">${s.name}</td>
+                    <td class="p-2 text-center sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-colors"><input type="checkbox" checked class="reading-check w-4 h-4 accent-teal-500 cursor-pointer" data-student-id="${s.id}"></td>
+                    <td class="p-2 text-slate-400 font-medium text-xs text-center sticky left-8 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-colors">${s.roll_number}</td>
+                    <td class="text-left font-bold text-slate-700 p-2 text-sm whitespace-nowrap sticky left-[4.5rem] bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.05)] transition-colors">${s.name}</td>
                     ${cells}
                     <td class="p-2"></td>
                 </tr>`;
             }).join('');
+        }
+
+        // ============ RANDOM & SET ALL BUTTONS ============
+        function getCheckedStudentIds(checkboxClass) {
+            return Array.from(document.querySelectorAll(`.${checkboxClass}:checked`)).map(cb => cb.dataset.studentId);
+        }
+
+        function toggleAllTraitsCheck(checked) {
+            document.querySelectorAll('.trait-check').forEach(cb => cb.checked = checked);
+        }
+
+        function toggleAllReadingCheck(checked) {
+            document.querySelectorAll('.reading-check').forEach(cb => cb.checked = checked);
+        }
+
+        function randomScoreTraits() {
+            const checkedIds = getCheckedStudentIds('trait-check');
+            if (checkedIds.length === 0) { alert('กรุณาเลือกนักเรียนอย่างน้อย 1 คน'); return; }
+            if (!confirm(`ต้องการสุ่มคะแนนคุณลักษณะอันพึงประสงค์ให้นักเรียน ${checkedIds.length} คน?`)) return;
+            students.filter(s => checkedIds.includes(String(s.id))).forEach(s => {
+                CHAR_TRAITS.forEach(t => {
+                    const randomVal = Math.floor(Math.random() * 3) + 1; // 1-3
+                    upSc(s.id, t.id, randomVal);
+                });
+            });
+            setTimeout(() => renderTraits(), 200);
+        }
+
+        function setAllTraits3() {
+            const checkedIds = getCheckedStudentIds('trait-check');
+            if (checkedIds.length === 0) { alert('กรุณาเลือกนักเรียนอย่างน้อย 1 คน'); return; }
+            if (!confirm(`ต้องการให้คะแนนคุณลักษณะอันพึงประสงค์ = 3 (ดีเยี่ยม) ให้นักเรียน ${checkedIds.length} คน?`)) return;
+            students.filter(s => checkedIds.includes(String(s.id))).forEach(s => {
+                CHAR_TRAITS.forEach(t => {
+                    upSc(s.id, t.id, 3);
+                });
+            });
+            setTimeout(() => renderTraits(), 200);
+        }
+
+        function randomScoreReading() {
+            const checkedIds = getCheckedStudentIds('reading-check');
+            if (checkedIds.length === 0) { alert('กรุณาเลือกนักเรียนอย่างน้อย 1 คน'); return; }
+            if (!confirm(`ต้องการสุ่มคะแนนอ่านคิดวิเคราะห์ให้นักเรียน ${checkedIds.length} คน?`)) return;
+            students.filter(s => checkedIds.includes(String(s.id))).forEach(s => {
+                READ_SKILLS.forEach(r => {
+                    const randomVal = Math.floor(Math.random() * 3) + 1; // 1-3
+                    upSc(s.id, r.id, randomVal);
+                });
+            });
+            setTimeout(() => renderReading(), 200);
+        }
+
+        function setAllReading3() {
+            const checkedIds = getCheckedStudentIds('reading-check');
+            if (checkedIds.length === 0) { alert('กรุณาเลือกนักเรียนอย่างน้อย 1 คน'); return; }
+            if (!confirm(`ต้องการให้คะแนนอ่านคิดวิเคราะห์ = 3 (ดีเยี่ยม) ให้นักเรียน ${checkedIds.length} คน?`)) return;
+            students.filter(s => checkedIds.includes(String(s.id))).forEach(s => {
+                READ_SKILLS.forEach(r => {
+                    upSc(s.id, r.id, 3);
+                });
+            });
+            setTimeout(() => renderReading(), 200);
         }
 
         // ============ DYNAMIC SCORES RENDERING ============
@@ -2520,6 +2865,7 @@
         function delStd(id) { if (confirm("ลบ?")) _sb.from('students').delete().eq('id', id).then(() => loadData()); }
         window.onload = init;
     </script>
+    <script src="add_export.js"></script>
 </body>
 
 </html>
