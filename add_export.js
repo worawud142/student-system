@@ -144,7 +144,7 @@ async function exportExcel() {
 
         let globalDaysCount = 0;
         allDates.forEach(d => { if (meetingDays.includes(new Date(d).getDay())) globalDaysCount++; });
-        const globalTotalSlots = globalDaysCount;
+        const globalTotalSlots = globalDaysCount * hpw;
 
         function fillAttendanceSheet(wsName, datesSpan) {
             const ws = wb.getWorksheet(wsName);
@@ -156,7 +156,7 @@ async function exportExcel() {
                     actualDaysCount++;
                 }
             });
-            const totalSlots = actualDaysCount;
+            const totalSlots = actualDaysCount * hpw;
 
             if (wsName === 'เวลาเรียน (3)') {
                 ws.getCell('BJ4').value = globalTotalSlots;
@@ -200,10 +200,10 @@ async function exportExcel() {
                     let st = attMap[date] || '';
                     let mark = '';
                     if (meetingDays.includes(new Date(date).getDay())) {
-                        if (st === 'A') { mark = 'ข'; kh += 1; }
-                        else if (st === 'L') { mark = 'ล'; la += 1; }
-                        else if (st === 'T') { mark = 'ป'; pa += 1; }
-                        else if (st === 'D') { mark = 'ด'; da += 1; }
+                        if (st === 'A') { mark = 'ข'; kh += hpw; }
+                        else if (st === 'L') { mark = 'ล'; la += hpw; }
+                        else if (st === 'T') { mark = 'ป'; pa += hpw; }
+                        else if (st === 'D') { mark = 'ด'; da += hpw; }
                     }
                     safeSetRC(ws, r, col, mark);
                 });
@@ -216,16 +216,16 @@ async function exportExcel() {
                 // Write Excel calculations for summary retaining dynamic formula updates with hpw
                 // Make formulas accumulate from previous sheet if it is the second sheet
                 if (wsName === 'เวลาเรียน (3)') {
-                    ws.getCell(r, 58).value = { formula: `COUNTIF(H${r}:BE${r},"ข")+'เวลาเรียน (2)'!BF${r}` };
-                    ws.getCell(r, 59).value = { formula: `COUNTIF(H${r}:BE${r},"ล")+'เวลาเรียน (2)'!BG${r}` };
-                    ws.getCell(r, 60).value = { formula: `COUNTIF(H${r}:BE${r},"ป")+'เวลาเรียน (2)'!BH${r}` };
-                    ws.getCell(r, 61).value = { formula: `COUNTIF(H${r}:BE${r},"ด")+'เวลาเรียน (2)'!BI${r}` };
+                    ws.getCell(r, 58).value = { formula: `COUNTIF(H${r}:BE${r},"ข")*${hpw}+'เวลาเรียน (2)'!BF${r}` };
+                    ws.getCell(r, 59).value = { formula: `COUNTIF(H${r}:BE${r},"ล")*${hpw}+'เวลาเรียน (2)'!BG${r}` };
+                    ws.getCell(r, 60).value = { formula: `COUNTIF(H${r}:BE${r},"ป")*${hpw}+'เวลาเรียน (2)'!BH${r}` };
+                    ws.getCell(r, 61).value = { formula: `COUNTIF(H${r}:BE${r},"ด")*${hpw}+'เวลาเรียน (2)'!BI${r}` };
                     ws.getCell(r, 62).value = { formula: `BJ4-SUM(BF${r}:BI${r})` };
                 } else {
-                    ws.getCell(r, 58).value = { formula: `COUNTIF(H${r}:BE${r},"ข")`, result: kh };
-                    ws.getCell(r, 59).value = { formula: `COUNTIF(H${r}:BE${r},"ล")`, result: la };
-                    ws.getCell(r, 60).value = { formula: `COUNTIF(H${r}:BE${r},"ป")`, result: pa };
-                    ws.getCell(r, 61).value = { formula: `COUNTIF(H${r}:BE${r},"ด")`, result: da };
+                    ws.getCell(r, 58).value = { formula: `COUNTIF(H${r}:BE${r},"ข")*${hpw}`, result: kh };
+                    ws.getCell(r, 59).value = { formula: `COUNTIF(H${r}:BE${r},"ล")*${hpw}`, result: la };
+                    ws.getCell(r, 60).value = { formula: `COUNTIF(H${r}:BE${r},"ป")*${hpw}`, result: pa };
+                    ws.getCell(r, 61).value = { formula: `COUNTIF(H${r}:BE${r},"ด")*${hpw}`, result: da };
                     ws.getCell(r, 62).value = { formula: `BJ4-SUM(BF${r}:BI${r})`, result: totalSlots - kh - la - pa - da };
                 }
             });
