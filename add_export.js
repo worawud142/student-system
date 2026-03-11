@@ -134,9 +134,25 @@ async function exportExcel() {
 
         const MONTHS_TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
+        const hpw = conf.hoursPerWeek || 2;
+        const dayOfWeekSet = new Set();
+        students.forEach(s => {
+            if (s.attendance) s.attendance.filter(a => a.subject_name === activeSubj.subject_name).forEach(a => dayOfWeekSet.add(new Date(a.check_date).getDay()));
+        });
+        const meetingDays = [...dayOfWeekSet];
+        if (meetingDays.length === 0) meetingDays.push(1, 2, 3, 4, 5);
+
         function fillAttendanceSheet(wsName, datesSpan) {
             const ws = wb.getWorksheet(wsName);
             if (!ws) return;
+
+            let actualDaysCount = 0;
+            datesSpan.forEach(d => {
+                if (d && meetingDays.includes(new Date(d).getDay())) {
+                    actualDaysCount++;
+                }
+            });
+            const totalSlots = actualDaysCount * hpw;
 
             // Write date headers into the template (Row 2 = Month, Row 4 = Day)
             // Leave Row 3 (Week) and Row 5 (Hour) untouched to preserve Excel template formatting
@@ -173,11 +189,13 @@ async function exportExcel() {
                     let col = 8 + dIdx; // D is 4, H is 8. Dates start at H.
                     let st = attMap[date] || '';
                     let mark = '';
-                    if (st === 'A') { mark = 'ข'; kh++; }
-                    if (st === 'L') { mark = 'ล'; la++; }
-                    if (st === 'T') { mark = 'ป'; pa++; }
-                    if (st === 'D') { mark = 'ด'; da++; }
-                    // Present or empty remains blank string ('')
+                    if (meetingDays.includes(new Date(date).getDay())) {
+                        if (st === 'P') { mark = '/'; }
+                        else if (st === 'A') { mark = 'ข'; kh += hpw; }
+                        else if (st === 'L') { mark = 'ล'; la += hpw; }
+                        else if (st === 'T') { mark = 'ป'; pa += hpw; }
+                        else if (st === 'D') { mark = 'ด'; da += hpw; }
+                    }
                     safeSetRC(ws, r, col, mark);
                 });
 
@@ -186,7 +204,13 @@ async function exportExcel() {
                     safeSetRC(ws, r, 8 + dIdx, '');
                 }
 
-                // Do NOT overwrite summary columns 58-62 (BF-BJ) as they contain Excel template formulas.
+                // Write Excel calculations for summary retaining dynamic formula updates with hpw
+                let totalPresent = totalSlots - kh - la - pa - da;
+                ws.getCell(r, 58).value = { formula: `COUNTIF(H${r}:BE${r},"ข")*${hpw}`, result: kh };
+                ws.getCell(r, 59).value = { formula: `COUNTIF(H${r}:BE${r},"ล")*${hpw}`, result: la };
+                ws.getCell(r, 60).value = { formula: `COUNTIF(H${r}:BE${r},"ป")*${hpw}`, result: pa };
+                ws.getCell(r, 61).value = { formula: `COUNTIF(H${r}:BE${r},"ด")*${hpw}`, result: da };
+                ws.getCell(r, 62).value = { formula: `${totalSlots}-SUM(BF${r}:BI${r})`, result: totalPresent };
             });
 
             // clear remaining rows for student details and dates, preserve formulas in 58-62
