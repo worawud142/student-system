@@ -2826,9 +2826,37 @@
                 counts[g]++; totalG += g;
             });
             document.getElementById('dash-avg').innerText = students.length ? (totalG / students.length).toFixed(1) : "0.0";
-            const date = document.getElementById('global-att-date').value;
-            const pres = students.filter(s => s.attendance.some(a => a.check_date === date && a.status === 'P' && a.subject_name === activeSubj.subject_name)).length;
-            document.getElementById('dash-att').innerText = students.length ? ((pres / students.length) * 100).toFixed(0) + "%" : "0%";
+            // Calculate overall attendance percentage across all recorded dates for this subject
+            let totalPossibleAtt = 0;
+            let totalPresentAtt = 0;
+            
+            students.forEach(s => {
+                const subjAtt = s.attendance.filter(a => a.subject_name === activeSubj.subject_name);
+                // Count all occurrences of attendance records for this subject across all students
+                // We use the set of all unique 'check_date' values for this subject to determine the number of sessions
+            });
+
+            // Better way: Find all unique dates recorded for this subject
+            const allSubjDates = new Set();
+            students.forEach(s => {
+                s.attendance.filter(a => a.subject_name === activeSubj.subject_name).forEach(a => {
+                    allSubjDates.add(a.check_date);
+                });
+            });
+
+            const uniqueDatesCount = allSubjDates.size;
+            let totalPresentCount = 0;
+            if (uniqueDatesCount > 0) {
+                students.forEach(s => {
+                    totalPresentCount += s.attendance.filter(a => 
+                        a.subject_name === activeSubj.subject_name && a.status === 'P'
+                    ).length;
+                });
+                const overallPct = (totalPresentCount / (students.length * uniqueDatesCount)) * 100;
+                document.getElementById('dash-att').innerText = overallPct.toFixed(0) + "%";
+            } else {
+                document.getElementById('dash-att').innerText = "0%";
+            }
             if (window.myChart) window.myChart.destroy();
             window.myChart = new Chart(document.getElementById('gradeChart'), { type: 'bar', data: { labels: Object.keys(counts).reverse(), datasets: [{ label: 'จำนวนนักเรียน', data: Object.values(counts).reverse(), backgroundColor: '#6366f1', borderRadius: 12 }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
