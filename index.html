@@ -1474,6 +1474,7 @@
             activeSubj = classes.find(c => c.id == id);
             await loadScoreConfig();
             loadCoverConfig();
+            loadFaceDescriptors();
             await loadData();
             document.getElementById('status-screen').classList.add('hidden');
             document.getElementById('main-ui').classList.remove('hidden');
@@ -2319,12 +2320,17 @@
         }
 
         function setAttMode(m) {
+            // หยุดกล้องใบหน้าก่อนเปลี่ยนโหมด
+            stopFaceCamera();
+
             document.getElementById('area-scanner').classList.toggle('hidden', m !== 'scanner');
             document.getElementById('area-face-single').classList.toggle('hidden', m !== 'face-single');
             document.getElementById('area-face-group').classList.toggle('hidden', m !== 'face-group');
-            document.getElementById('area-manual').classList.toggle('hidden', m === 'manual');
+            document.getElementById('area-manual').classList.toggle('hidden', m !== 'manual');
 
             if (m === 'scanner') startScanner(); else stopScanner();
+            if (m === 'face-single') startFaceSingle();
+            if (m === 'face-group') startFaceGroup();
 
             document.getElementById('btn-mode-scanner').className = m === 'scanner' ? 'px-4 py-3 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-md transition-all whitespace-nowrap' : 'px-4 py-3 rounded-xl text-xs font-black text-slate-400 transition-all whitespace-nowrap';
             document.getElementById('btn-mode-face-single').className = m === 'face-single' ? 'px-4 py-3 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-md transition-all whitespace-nowrap' : 'px-4 py-3 rounded-xl text-xs font-black text-slate-400 transition-all whitespace-nowrap';
@@ -2870,16 +2876,372 @@
             });
         }
 
-        // ============ FACE REGISTRATION STUBS ============
-        function openFaceReg(studentId) {
-            alert('ระบบ Face Recognition กำลังอยู่ในช่วงปรับปรุง กรุณาใช้การสแกน QR หรือเช็คชื่อด้วยตนเอง');
+        // ============ FACE RECOGNITION - FULL IMPLEMENTATION ============
+
+        // โหลด Face API models จาก CDN
+        async function loadFaceModels() {
+            if (faceApiLoaded) return true;
+            try {
+                await Promise.all([
+                    faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL),
+                    faceapi.nets.faceLandmark68TinyNet.loadFromUri(FACE_MODEL_URL),
+                    faceapi.nets.faceRecognitionNet.loadFromUri(FACE_MODEL_URL),
+                ]);
+                faceApiLoaded = true;
+                return true;
+            } catch (e) {
+                console.error('Face API load error:', e);
+                return false;
+            }
         }
+
+        // บันทึก/โหลด face descriptors จาก localStorage (per subject)
+        function loadFaceDescriptors() {
+            if (!activeSubj) return;
+            const saved = localStorage.getItem('faceDesc_' + activeSubj.id);
+            if (!saved) { faceDescriptors = []; return; }
+            try {
+                faceDescriptors = JSON.parse(saved).map(d => ({
+                    studentId: d.studentId,
+                    name: d.name,
+                    descriptor: new Float32Array(d.descriptor)
+                }));
+            } catch { faceDescriptors = []; }
+        }
+
+        function saveFaceDescriptorsToStorage() {
+            if (!activeSubj) return;
+            localStorage.setItem('faceDesc_' + activeSubj.id, JSON.stringify(
+                faceDescriptors.map(d => ({
+                    studentId: d.studentId,
+                    name: d.name,
+                    descriptor: Array.from(d.descriptor)
+                }))
+            ));
+        }
+
+        // หยุดกล้องและ detection loop
+        function stopFaceCamera() {
+            if (faceDetectionInterval) { clearInterval(faceDetectionInterval); faceDetectionInterval = null; }
+            if (faceStream) { faceStream.getTracks().forEach(t => t.stop()); faceStream = null; }
+            currentFaceMode = null;
+        }
+
+        // ─── โหมดเช็คชื่อทีละคน ──────────────────────────────────
+        async function startFaceSingle() {
+            const loadingEl = document.getElementById('face-loading-single');
+            const scannerEl = document.getElementById('face-scanner-single');
+            loadingEl.classList.remove('hidden');
+            loadingEl.innerHTML = '<div class="face-loading-spinner"></div><p class="font-bold">กำลังโหลด Face Recognition...</p>';
+            scannerEl.classList.add('hidden');
+
+            const ok = await loadFaceModels();
+            loadFaceDescriptors();
+            if (!ok) {
+                loadingEl.innerHTML = '<p class="text-red-500 font-bold p-6">❌ โหลด Face API ไม่สำเร็จ กรุณา Refresh</p>';
+                return;
+            }
+            try {
+                faceStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
+            } catch (e) {
+                loadingEl.innerHTML = `<p class="text-red-500 font-bold p-6">❌ เปิดกล้องไม่ได้: ${e.message}</p>`;
+                return;
+            }
+
+            const video = document.getElementById('face-video-single');
+            video.srcObject = faceStream;
+            await new Promise(r => video.onloadedmetadata = r);
+            video.play();
+            const canvas = document.getElementById('face-canvas-single');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+
+            loadingEl.classList.add('hidden');
+            scannerEl.classList.remove('hidden');
+            currentFaceMode = 'single';
+
+            let lastCheckedId = '', cooldown = false;
+
+            faceDetectionInterval = setInterval(async () => {
+                if (currentFaceMode !== 'single' || cooldown) return;
+                try {
+                    const detections = await faceapi
+                        .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320 }))
+                        .withFaceLandmarks(true).withFaceDescriptors();
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    if (!detections.length) {
+                        document.getElementById('face-status-single').textContent = '🔍 กำลังค้นหาใบหน้า...';
+                        document.getElementById('face-result-single').classList.add('hidden');
+                        lastCheckedId = '';
+                        return;
+                    }
+
+                    const resized = faceapi.resizeResults(detections, { width: canvas.width, height: canvas.height });
+                    const box = resized[0].detection.box;
+
+                    if (!faceDescriptors.length) {
+                        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3;
+                        ctx.strokeRect(box.x, box.y, box.width, box.height);
+                        document.getElementById('face-status-single').textContent = '⚠️ ยังไม่มีใบหน้าที่ลงทะเบียน กรุณากด 📷 ที่ตารางด้านขวา';
+                        return;
+                    }
+
+                    const matcher = new faceapi.FaceMatcher(
+                        faceDescriptors.map(fd => new faceapi.LabeledFaceDescriptors(fd.studentId.toString(), [fd.descriptor])),
+                        FACE_MATCH_THRESHOLD
+                    );
+                    const match = matcher.findBestMatch(detections[0].descriptor);
+
+                    if (match.label !== 'unknown') {
+                        const student = students.find(s => s.id.toString() === match.label);
+                        ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3;
+                        ctx.strokeRect(box.x, box.y, box.width, box.height);
+                        ctx.fillStyle = '#10b981'; ctx.font = 'bold 16px sans-serif';
+                        if (student) ctx.fillText(student.name, box.x, box.y - 8);
+
+                        if (student && student.id.toString() !== lastCheckedId) {
+                            lastCheckedId = student.id.toString();
+                            cooldown = true;
+                            document.getElementById('face-status-single').textContent = `✅ พบ: ${student.name}`;
+                            document.getElementById('face-name-single').textContent = student.name;
+                            document.getElementById('face-result-single').classList.remove('hidden');
+
+                            const date = document.getElementById('global-att-date').value;
+                            await _sb.from('attendance').upsert(
+                                { student_id: student.id, check_date: date, status: 'P', subject_name: activeSubj.subject_name },
+                                { onConflict: 'student_id, check_date, subject_name' }
+                            );
+                            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                            await loadData();
+                            setTimeout(() => {
+                                lastCheckedId = ''; cooldown = false;
+                                document.getElementById('face-result-single').classList.add('hidden');
+                            }, 3000);
+                        }
+                    } else {
+                        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2;
+                        ctx.strokeRect(box.x, box.y, box.width, box.height);
+                        document.getElementById('face-status-single').textContent = '❓ ไม่พบนักเรียนที่ตรงกัน';
+                        lastCheckedId = '';
+                    }
+                } catch (err) { console.warn('Face detect error:', err); }
+            }, 800);
+        }
+
+        // ─── โหมดเช็คชื่อกลุ่ม ───────────────────────────────────
+        async function startFaceGroup() {
+            const loadingEl = document.getElementById('face-loading-group');
+            const scannerEl = document.getElementById('face-scanner-group');
+            loadingEl.classList.remove('hidden');
+            loadingEl.innerHTML = '<div class="face-loading-spinner"></div><p class="font-bold">กำลังโหลด Face Recognition...</p>';
+            scannerEl.classList.add('hidden');
+            checkedStudentsToday.clear();
+            document.getElementById('face-names-group').innerHTML = '';
+
+            const ok = await loadFaceModels();
+            loadFaceDescriptors();
+            if (!ok) {
+                loadingEl.innerHTML = '<p class="text-red-500 font-bold p-6">❌ โหลด Face API ไม่สำเร็จ</p>';
+                return;
+            }
+            try {
+                faceStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
+            } catch (e) {
+                loadingEl.innerHTML = `<p class="text-red-500 font-bold p-6">❌ เปิดกล้องไม่ได้: ${e.message}</p>`;
+                return;
+            }
+
+            const video = document.getElementById('face-video-group');
+            video.srcObject = faceStream;
+            await new Promise(r => video.onloadedmetadata = r);
+            video.play();
+            const canvas = document.getElementById('face-canvas-group');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+
+            loadingEl.classList.add('hidden');
+            scannerEl.classList.remove('hidden');
+            currentFaceMode = 'group';
+
+            faceDetectionInterval = setInterval(async () => {
+                if (currentFaceMode !== 'group') return;
+                try {
+                    const detections = await faceapi
+                        .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }))
+                        .withFaceLandmarks(true).withFaceDescriptors();
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    document.getElementById('face-status-group').textContent =
+                        detections.length ? `👥 พบ ${detections.length} ใบหน้า` : '👥 กำลังค้นหาหลายใบหน้า...';
+
+                    if (!detections.length || !faceDescriptors.length) return;
+
+                    const matcher = new faceapi.FaceMatcher(
+                        faceDescriptors.map(fd => new faceapi.LabeledFaceDescriptors(fd.studentId.toString(), [fd.descriptor])),
+                        FACE_MATCH_THRESHOLD
+                    );
+                    const resized = faceapi.resizeResults(detections, { width: canvas.width, height: canvas.height });
+                    const date = document.getElementById('global-att-date').value;
+
+                    for (let i = 0; i < detections.length; i++) {
+                        const match = matcher.findBestMatch(detections[i].descriptor);
+                        const box = resized[i].detection.box;
+                        if (match.label !== 'unknown') {
+                            const student = students.find(s => s.id.toString() === match.label);
+                            ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3;
+                            ctx.strokeRect(box.x, box.y, box.width, box.height);
+                            ctx.fillStyle = '#10b981'; ctx.font = 'bold 13px sans-serif';
+                            if (student) ctx.fillText(student.name, box.x, box.y - 6);
+
+                            if (student && !checkedStudentsToday.has(student.id.toString())) {
+                                checkedStudentsToday.add(student.id.toString());
+                                await _sb.from('attendance').upsert(
+                                    { student_id: student.id, check_date: date, status: 'P', subject_name: activeSubj.subject_name },
+                                    { onConflict: 'student_id, check_date, subject_name' }
+                                );
+                                const badge = document.createElement('span');
+                                badge.className = 'px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-bold';
+                                badge.textContent = '✅ ' + student.name;
+                                document.getElementById('face-names-group').appendChild(badge);
+                                await loadData();
+                            }
+                        } else {
+                            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
+                            ctx.strokeRect(box.x, box.y, box.width, box.height);
+                        }
+                    }
+                } catch (err) { console.warn('Group face detect error:', err); }
+            }, 1200);
+        }
+
+        // ─── ลงทะเบียนใบหน้า ─────────────────────────────────────
+        async function openFaceReg(studentId) {
+            currentRegStudentId = studentId;
+            capturedFaceDescriptor = null;
+            const student = students.find(s => s.id == studentId);
+
+            document.getElementById('faceRegSubtitle').textContent = student ? '📷 ถ่ายภาพใบหน้าของ ' + student.name : '';
+            document.getElementById('faceRegLoading').classList.remove('hidden');
+            document.getElementById('faceRegLoading').innerHTML = '<div class="face-loading-spinner"></div><p class="font-bold">กำลังเปิดกล้อง...</p>';
+            document.getElementById('faceRegContent').classList.add('hidden');
+            document.getElementById('faceRegPreview').classList.add('hidden');
+            document.getElementById('faceRegCaptureBtn').classList.remove('hidden');
+            document.getElementById('faceRegSaveBtn').classList.add('hidden');
+            document.getElementById('faceRegRetakeBtn').classList.add('hidden');
+            document.getElementById('faceRegModal').classList.remove('hidden');
+
+            const ok = await loadFaceModels();
+            if (!ok) {
+                document.getElementById('faceRegLoading').innerHTML = '<p class="text-red-500 font-bold">❌ โหลด Face API ไม่สำเร็จ</p>';
+                return;
+            }
+
+            // หยุดกล้องเช็คชื่อก่อน (ถ้ามี)
+            stopFaceCamera();
+
+            try {
+                faceStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
+            } catch (e) {
+                document.getElementById('faceRegLoading').innerHTML = `<p class="text-red-500 font-bold">❌ เปิดกล้องไม่ได้: ${e.message}</p>`;
+                return;
+            }
+
+            const video = document.getElementById('faceRegVideo');
+            video.srcObject = faceStream;
+            await new Promise(r => video.onloadedmetadata = r);
+            video.play();
+            const canvas = document.getElementById('faceRegCanvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+
+            document.getElementById('faceRegLoading').classList.add('hidden');
+            document.getElementById('faceRegContent').classList.remove('hidden');
+            document.getElementById('faceRegStatus').textContent = '🔍 หันหน้าตรงกล้อง';
+
+            // วาด bounding box live
+            faceDetectionInterval = setInterval(async () => {
+                if (document.getElementById('faceRegModal').classList.contains('hidden')) return;
+                try {
+                    const det = await faceapi
+                        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320 }))
+                        .withFaceLandmarks(true);
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    if (det) {
+                        const r = faceapi.resizeResults(det, { width: canvas.width, height: canvas.height });
+                        ctx.strokeStyle = '#06b6d4'; ctx.lineWidth = 3;
+                        ctx.strokeRect(r.detection.box.x, r.detection.box.y, r.detection.box.width, r.detection.box.height);
+                        document.getElementById('faceRegStatus').textContent = '✅ พบใบหน้า – กด "ถ่ายภาพ"';
+                    } else {
+                        document.getElementById('faceRegStatus').textContent = '🔍 หันหน้าตรงกล้อง';
+                    }
+                } catch {}
+            }, 500);
+        }
+
+        async function captureFace() {
+            const video = document.getElementById('faceRegVideo');
+            const det = await faceapi
+                .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320 }))
+                .withFaceLandmarks(true).withFaceDescriptor();
+            if (!det) { alert('❌ ไม่พบใบหน้า กรุณาหันหน้าตรงกล้อง'); return; }
+
+            capturedFaceDescriptor = det.descriptor;
+
+            // Crop ภาพใบหน้าสำหรับ preview
+            const tmpCanvas = document.createElement('canvas');
+            const box = det.detection.box;
+            const pad = 40;
+            tmpCanvas.width = box.width + pad * 2;
+            tmpCanvas.height = box.height + pad * 2;
+            tmpCanvas.getContext('2d').drawImage(
+                video,
+                Math.max(0, box.x - pad), Math.max(0, box.y - pad),
+                box.width + pad * 2, box.height + pad * 2,
+                0, 0, tmpCanvas.width, tmpCanvas.height
+            );
+            document.getElementById('faceRegPreviewImg').src = tmpCanvas.toDataURL();
+            document.getElementById('faceRegPreview').classList.remove('hidden');
+            document.getElementById('faceRegCaptureBtn').classList.add('hidden');
+            document.getElementById('faceRegSaveBtn').classList.remove('hidden');
+            document.getElementById('faceRegRetakeBtn').classList.remove('hidden');
+            document.getElementById('faceRegStatus').textContent = '📸 ตรวจสอบภาพ แล้วกด "บันทึก"';
+        }
+
+        function retakeFace() {
+            capturedFaceDescriptor = null;
+            document.getElementById('faceRegPreview').classList.add('hidden');
+            document.getElementById('faceRegCaptureBtn').classList.remove('hidden');
+            document.getElementById('faceRegSaveBtn').classList.add('hidden');
+            document.getElementById('faceRegRetakeBtn').classList.add('hidden');
+            document.getElementById('faceRegStatus').textContent = '🔍 หันหน้าตรงกล้อง';
+        }
+
+        function saveFaceDescriptor() {
+            if (!capturedFaceDescriptor || !currentRegStudentId) return;
+            loadFaceDescriptors();
+            const student = students.find(s => s.id == currentRegStudentId);
+            // ลบ descriptor เดิมของนักเรียนคนนี้ (ถ้ามี)
+            faceDescriptors = faceDescriptors.filter(d => d.studentId.toString() !== currentRegStudentId.toString());
+            faceDescriptors.push({
+                studentId: currentRegStudentId.toString(),
+                name: student ? student.name : '',
+                descriptor: capturedFaceDescriptor
+            });
+            saveFaceDescriptorsToStorage();
+            alert(`✅ บันทึกใบหน้าของ "${student?.name}" สำเร็จ!`);
+            closeFaceReg();
+            renderStats(); // refresh badge ในตาราง
+        }
+
         function closeFaceReg() {
+            if (faceDetectionInterval) { clearInterval(faceDetectionInterval); faceDetectionInterval = null; }
+            if (faceStream) { faceStream.getTracks().forEach(t => t.stop()); faceStream = null; }
             document.getElementById('faceRegModal').classList.add('hidden');
         }
-        function captureFace() { }
-        function saveFaceDescriptor() { }
-        function retakeFace() { }
         function openClassModal() { document.getElementById('classModal').classList.remove('hidden'); }
         function closeClassModal() { document.getElementById('classModal').classList.add('hidden'); }
         async function saveNewClass() {
