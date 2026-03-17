@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ปพ.5 Digital Cloud v27.3 (Minimal White)</title>
+    <title>ปพ.5 Digital Cloud </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"
         rel="stylesheet">
@@ -1285,6 +1285,7 @@
         let capturedFaceDescriptor = null;
         const FACE_MATCH_THRESHOLD = 0.6; // Lower = stricter matching
         const FACE_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
+        const FACE_DESC_TABLE = 'face_descriptors';
         let modelLoadingProgress = 0;
         const checkedStudentsToday = new Set(); // Prevent duplicate check-ins in group mode
 
@@ -1474,7 +1475,7 @@
             activeSubj = classes.find(c => c.id == id);
             await loadScoreConfig();
             loadCoverConfig();
-            loadFaceDescriptors();
+            await loadFaceDescriptors();
             await loadData();
             document.getElementById('status-screen').classList.add('hidden');
             document.getElementById('main-ui').classList.remove('hidden');
@@ -1511,7 +1512,7 @@
                 const atts = s.attendance.filter(a => a.subject_name === activeSubj.subject_name);
                 const p = atts.filter(a => a.status === 'P').length, a = atts.filter(a => a.status === 'A').length, l = atts.filter(a => a.status === 'L').length;
                 const total = p + a + l; const pct = total > 0 ? ((p / total) * 100).toFixed(0) : 0;
-                const hasFace = faceDescriptors.some(fd => fd.studentId === s.id);
+                const hasFace = faceDescriptors.some(fd => fd.studentId.toString() === s.id.toString());
                 const faceBtn = hasFace
                     ? `<span class="face-badge face-badge-registered">✅ ลงทะเบียนแล้ว</span>`
                     : `<button onclick="openFaceReg('${s.id}')" class="face-badge face-badge-unregistered hover:scale-105 transition-transform">📷 ลงทะเบียน</button>`;
@@ -2895,10 +2896,47 @@
             }
         }
 
-        // บันทึก/โหลด face descriptors จาก localStorage (per subject)
-        function loadFaceDescriptors() {
+        // บันทึก/โหลด face descriptors จาก Supabase (fallback localStorage)
+        async function loadFaceDescriptors() {
             if (!activeSubj) return;
-            const saved = localStorage.getItem('faceDesc_' + activeSubj.id);
+            const cacheKey = 'faceDesc_' + activeSubj.id;
+            faceDescriptors = [];
+
+            try {
+                const { data, error } = await _sb
+                    .from(FACE_DESC_TABLE)
+                    .select('student_id, descriptor, image_data');
+                if (error) throw error;
+
+                const allowedIds = new Set((students || []).map(s => s.id.toString()));
+                faceDescriptors = (data || [])
+                    .filter(d => {
+                        const sid = d.student_id?.toString();
+                        return Array.isArray(d.descriptor) && d.descriptor.length && (allowedIds.size ? allowedIds.has(sid) : true);
+                    })
+                    .map(d => {
+                        const sid = d.student_id?.toString();
+                        const student = students.find(s => s.id.toString() === sid);
+                        return {
+                            studentId: sid,
+                            name: student ? student.name : '',
+                            descriptor: new Float32Array(d.descriptor)
+                        };
+                    });
+
+                localStorage.setItem(cacheKey, JSON.stringify(
+                    faceDescriptors.map(d => ({
+                        studentId: d.studentId,
+                        name: d.name,
+                        descriptor: Array.from(d.descriptor)
+                    }))
+                ));
+                return;
+            } catch (e) {
+                console.warn('Load face descriptors from Supabase failed, fallback to localStorage:', e?.message || e);
+            }
+
+            const saved = localStorage.getItem(cacheKey);
             if (!saved) { faceDescriptors = []; return; }
             try {
                 faceDescriptors = JSON.parse(saved).map(d => ({
@@ -2906,18 +2944,43 @@
                     name: d.name,
                     descriptor: new Float32Array(d.descriptor)
                 }));
-            } catch { faceDescriptors = []; }
+            } catch {
+                faceDescriptors = [];
+            }
         }
 
-        function saveFaceDescriptorsToStorage() {
+        async function saveFaceDescriptorsToStorage() {
             if (!activeSubj) return;
-            localStorage.setItem('faceDesc_' + activeSubj.id, JSON.stringify(
-                faceDescriptors.map(d => ({
-                    studentId: d.studentId,
-                    name: d.name,
-                    descriptor: Array.from(d.descriptor)
-                }))
-            ));
+            const payload = faceDescriptors.map(d => ({
+                studentId: d.studentId.toString(),
+                name: d.name || '',
+                descriptor: Array.from(d.descriptor)
+            }));
+            localStorage.setItem('faceDesc_' + activeSubj.id, JSON.stringify(payload));
+        }
+
+        async function saveFaceDescriptorToSupabase(studentId, descriptor, imageData) {
+            const row = {
+                student_id: studentId,
+                descriptor,
+                image_data: imageData || null
+            };
+
+            try {
+                const { error } = await _sb.from(FACE_DESC_TABLE).upsert(row, { onConflict: 'student_id' });
+                if (error) throw error;
+                return;
+            } catch (e) {
+                try {
+                    const { error: delErr } = await _sb.from(FACE_DESC_TABLE).delete().eq('student_id', studentId);
+                    if (delErr) throw delErr;
+                    const { error: insErr } = await _sb.from(FACE_DESC_TABLE).insert(row);
+                    if (insErr) throw insErr;
+                    return;
+                } catch (fallbackErr) {
+                    console.warn('Save face descriptor to Supabase failed, localStorage only:', fallbackErr?.message || fallbackErr);
+                }
+            }
         }
 
         // หยุดกล้องและ detection loop
@@ -2936,7 +2999,7 @@
             scannerEl.classList.add('hidden');
 
             const ok = await loadFaceModels();
-            loadFaceDescriptors();
+            await loadFaceDescriptors();
             if (!ok) {
                 loadingEl.innerHTML = '<p class="text-red-500 font-bold p-6">❌ โหลด Face API ไม่สำเร็จ กรุณา Refresh</p>';
                 return;
@@ -3041,7 +3104,7 @@
             document.getElementById('face-names-group').innerHTML = '';
 
             const ok = await loadFaceModels();
-            loadFaceDescriptors();
+            await loadFaceDescriptors();
             if (!ok) {
                 loadingEl.innerHTML = '<p class="text-red-500 font-bold p-6">❌ โหลด Face API ไม่สำเร็จ</p>';
                 return;
@@ -3220,9 +3283,9 @@
             document.getElementById('faceRegStatus').textContent = '🔍 หันหน้าตรงกล้อง';
         }
 
-        function saveFaceDescriptor() {
+        async function saveFaceDescriptor() {
             if (!capturedFaceDescriptor || !currentRegStudentId) return;
-            loadFaceDescriptors();
+            await loadFaceDescriptors();
             const student = students.find(s => s.id == currentRegStudentId);
             // ลบ descriptor เดิมของนักเรียนคนนี้ (ถ้ามี)
             faceDescriptors = faceDescriptors.filter(d => d.studentId.toString() !== currentRegStudentId.toString());
@@ -3231,7 +3294,9 @@
                 name: student ? student.name : '',
                 descriptor: capturedFaceDescriptor
             });
-            saveFaceDescriptorsToStorage();
+            await saveFaceDescriptorsToStorage();
+            const faceImgData = document.getElementById('faceRegPreviewImg')?.src || null;
+            await saveFaceDescriptorToSupabase(currentRegStudentId.toString(), Array.from(capturedFaceDescriptor), faceImgData);
             alert(`✅ บันทึกใบหน้าของ "${student?.name}" สำเร็จ!`);
             closeFaceReg();
             renderStats(); // refresh badge ในตาราง
