@@ -4,6 +4,21 @@ async function exportExcel() {
     try {
         const btn = document.querySelector('button[onclick="exportExcel()"]');
         const oldText = btn ? btn.innerText : '📥 Export Excel';
+        if (btn) btn.innerText = '⏳ กำลังบันทึกข้อมูล...';
+
+        // ── Flush pending scores ก่อน export เสมอ ──────────────────
+        // ป้องกัน race condition: upSc อัปเดต memory แต่ debounce 800ms
+        // ยังไม่ save → loadData อาจถูกเรียกจากที่อื่น (attendance/QR/face)
+        // ทำให้ students ถูก reset จาก Supabase โดยที่ trait scores ยังไม่ถูก save
+        const pendingIds = typeof pendingScores !== 'undefined'
+            ? Object.keys(pendingScores || {})
+            : [];
+        if (pendingIds.length > 0) {
+            await Promise.all(pendingIds.map(id => saveScores(id)));
+        }
+        // โหลดข้อมูลใหม่จาก Supabase เพื่อให้ได้ score_data ล่าสุดครบถ้วน
+        await loadData();
+
         if (btn) btn.innerText = '⏳ กำลังสร้างไฟล์...';
 
         const binaryString = atob(TEMPLATE_B64);
@@ -244,6 +259,10 @@ async function exportExcel() {
             const rec = s.scores.find(x => x.subject_name === activeSubj.subject_name) || {};
             let d = rec.score_data || {};
             if (typeof d === 'string') try { d = JSON.parse(d); } catch (e) { d = {}; }
+            // รวม pending scores ที่ยังไม่ได้ save เข้าด้วยเสมอ (กัน race condition)
+            if (typeof pendingScores !== 'undefined' && pendingScores[s.id]) {
+                d = Object.assign({}, d, pendingScores[s.id]);
+            }
             return d;
         }
 
@@ -415,7 +434,7 @@ async function exportExcel() {
             students.forEach((s, i) => {
                 const d = getSData(s);
                 let b = [];
-                for (let j = 0; j < 8; j++) b.push(d[CHAR_TRAITS[j]] !== undefined ? d[CHAR_TRAITS[j]] : 3);
+                for (let j = 0; j < 8; j++) b.push(d[CHAR_TRAITS[j]] !== undefined && d[CHAR_TRAITS[j]] !== null ? d[CHAR_TRAITS[j]] : '');
 
                 let r = 7 + i;
                 ws9.getCell(`A${r}`).value = s.roll_number || (i + 1);
@@ -444,8 +463,9 @@ async function exportExcel() {
                 ['Y', 'Z'].forEach(c => safeSet(ws9, `${c}${r}`, b[7]));
                 safeSet(ws9, `AA${r}`, b[7]);
 
-                const sumB = b.reduce((a, x) => parseFloat(a) + parseFloat(x), 0);
-                safeSet(ws9, `AB${r}`, Math.round((sumB / 8) * 100) / 100);
+                const sumB = b.reduce((a, x) => (parseFloat(a) || 0) + (parseFloat(x) || 0), 0);
+                const filledB = b.filter(v => v !== '').length;
+                safeSet(ws9, `AB${r}`, filledB > 0 ? Math.round((sumB / 8) * 100) / 100 : '');
             });
         }
 
@@ -459,7 +479,7 @@ async function exportExcel() {
             students.forEach((s, i) => {
                 const d = getSData(s);
                 let rv = [];
-                for (let j = 0; j < 5; j++) rv.push(d[READ_SKILLS[j]] !== undefined ? d[READ_SKILLS[j]] : 3);
+                for (let j = 0; j < 5; j++) rv.push(d[READ_SKILLS[j]] !== undefined && d[READ_SKILLS[j]] !== null ? d[READ_SKILLS[j]] : '');
 
                 let r = 7 + i;
                 ws10.getCell(`A${r}`).value = s.roll_number || (i + 1);
@@ -480,8 +500,9 @@ async function exportExcel() {
                 ['S', 'T', 'U'].forEach(c => safeSet(ws10, `${c}${r}`, rv[4]));
                 safeSet(ws10, `V${r}`, rv[4]);
 
-                const sumR = rv.reduce((a, x) => parseFloat(a) + parseFloat(x), 0);
-                safeSet(ws10, `W${r}`, Math.round((sumR / 5) * 100) / 100);
+                const sumR = rv.reduce((a, x) => (parseFloat(a) || 0) + (parseFloat(x) || 0), 0);
+                const filledR = rv.filter(v => v !== '').length;
+                safeSet(ws10, `W${r}`, filledR > 0 ? Math.round((sumR / 5) * 100) / 100 : '');
             });
         }
 
