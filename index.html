@@ -752,6 +752,9 @@
                             <button id="nav-reading" onclick="switchTab('reading')"
                                 class="text-left px-5 py-3 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-bold border-b border-slate-100 w-full rounded-none m-0 bg-transparent flex justify-start items-center gap-2 transition-colors">📖
                                 อ่านคิดวิเคราะห์ฯ</button>
+                            <button id="nav-competency" onclick="switchTab('competency')"
+                                class="text-left px-5 py-3 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-bold border-b border-slate-100 w-full rounded-none m-0 bg-transparent flex justify-start items-center gap-2 transition-colors">🧠
+                                สมรรถนะสำคัญฯ</button>
                             <button id="nav-qr-cards" onclick="switchTab('qr-cards')"
                                 class="text-left px-5 py-3 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-bold w-full rounded-none m-0 bg-transparent flex justify-start items-center gap-2 transition-colors">🎫
                                 บัตร QR</button>
@@ -920,13 +923,19 @@
                     <div class="glass-card rounded-[3.5rem] overflow-hidden text-center font-bold">
                         <div class="p-8 border-b border-slate-100/50 flex flex-wrap justify-between items-center gap-4">
                             <h3 class="text-xl font-black text-slate-800 uppercase">บันทึกคะแนนรายวิชา</h3>
-                            <div class="flex gap-3">
+                            <div class="flex gap-3 flex-wrap">
                                 <button onclick="openScoreConfig()"
                                     class="bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 px-6 py-3 rounded-2xl text-xs font-black hover:from-amber-500 hover:to-orange-500 hover:text-white transition-all">⚙️
                                     ตั้งค่าหมวดคะแนน</button>
                                 <button onclick="openBulk()"
                                     class="bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 px-8 py-3 rounded-2xl text-xs font-black hover:from-indigo-500 hover:to-purple-600 hover:text-white transition-all">+
                                     นำรายชื่อเข้า</button>
+                                <button id="btn-save-all-scores" onclick="saveAllScores()"
+                                    class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-3 rounded-2xl text-xs font-black hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg shadow-emerald-200 hover:shadow-emerald-300 hover:scale-105 active:scale-95 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                    </svg>
+                                    💾 บันทึกคะแนนทั้งหมด</button>
                             </div>
                         </div>
                         <!-- Score Config Summary -->
@@ -998,6 +1007,32 @@
                     </div>
                 </div>
 
+                <div id="tab-competency" class="tab-content text-center">
+                    <div class="glass-card rounded-[3.5rem] overflow-hidden">
+                        <div class="p-8 border-b border-slate-100/50 flex flex-wrap justify-between items-center gap-4">
+                            <h3 class="text-xl font-black text-slate-800 uppercase">บันทึกสมรรถนะสำคัญของผู้เรียน</h3>
+                            <div class="flex gap-3">
+                                <button onclick="randomScoreCompetency()"
+                                    class="bg-gradient-to-r from-purple-100 to-violet-100 text-purple-700 px-6 py-3 rounded-2xl text-xs font-black hover:from-purple-500 hover:to-violet-500 hover:text-white transition-all">🎲
+                                    สุ่มให้คะแนน</button>
+                                <button onclick="setAllCompetency3()"
+                                    class="bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 px-6 py-3 rounded-2xl text-xs font-black hover:from-emerald-500 hover:to-teal-500 hover:text-white transition-all">⭐
+                                    เลือกให้ 3 ทั้งหมด</button>
+                            </div>
+                        </div>
+                        <div
+                            class="p-4 bg-gradient-to-r from-purple-50/50 to-violet-50/50 text-sm text-slate-600 border-b border-slate-100/30 font-bold">
+                            ให้คะแนน 0-3 (3=ดีเยี่ยม, 2=ดี, 1=ผ่าน, 0=ไม่ผ่าน)
+                        </div>
+                        <div class="overflow-x-auto overflow-y-auto max-h-[60vh]">
+                            <table class="w-full text-center font-bold text-lg min-w-max">
+                                <thead id="competency-thead" class="bg-slate-50/50 text-slate-500 font-black"></thead>
+                                <tbody id="competency-body" class="divide-y text-slate-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="tab-qr-cards" class="tab-content text-center">
                     <button onclick="window.print()" class="no-print mb-10 btn-premium px-14 py-4 rounded-full">🖨️
                         พิมพ์บัตร
@@ -1020,6 +1055,14 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Save Toast Notification -->
+    <div id="save-toast"
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-7 py-4 rounded-2xl text-white font-black text-sm shadow-2xl transition-all duration-500 opacity-0 pointer-events-none scale-90"
+        style="min-width:260px; max-width:420px; backdrop-filter:blur(12px);">
+        <span id="save-toast-icon" class="text-xl">✅</span>
+        <span id="save-toast-msg"></span>
     </div>
 
     <div id="classModal"
@@ -1130,6 +1173,18 @@
                         placeholder="สำนักงานเขตพื้นที่การศึกษาประถมศึกษา สกลนคร เขต 3">
                 </div>
                 <div>
+                    <label class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">ข้อความบรรทัดที่ 1 บนหน้าปก</label>
+                    <input type="text" id="cover-line-1"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="สมุดบันทึกผลการพัฒนาผู้เรียนรายวิชา">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">ข้อความบรรทัดที่ 2 บนหน้าปก</label>
+                    <input type="text" id="cover-line-2"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="ตามหลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พุทธศักราช 2551">
+                </div>
+                <div>
                     <label class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">ภาคเรียนที่</label>
                     <input type="text" id="cover-term"
                         class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
@@ -1185,28 +1240,16 @@
                 </div>
                 <div>
                     <label
-                        class="text-xs text-slate-500 uppercase tracking-wider mb-2 block">สถานะการอนุมัติผลการเรียน</label>
-                    <div class="flex gap-6 p-4 bg-white/50 rounded-2xl border border-slate-200">
-                        <label class="flex items-center gap-2 cursor-pointer group">
-                            <input type="radio" name="cover-approval" value="approved" id="cover-approval-yes"
-                                class="w-5 h-5 text-indigo-600 focus:ring-indigo-500 border-slate-300">
-                            <span
-                                class="text-slate-700 font-bold group-hover:text-indigo-600 transition-all">อนุมัติ</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer group">
-                            <input type="radio" name="cover-approval" value="disapproved" id="cover-approval-no"
-                                class="w-5 h-5 text-red-600 focus:ring-red-500 border-slate-300">
-                            <span
-                                class="text-slate-700 font-bold group-hover:text-red-600 transition-all">ไม่อนุมัติ</span>
-                        </label>
-                    </div>
-                </div>
-                <div>
-                    <label
                         class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">จำนวนชั่วโมงต่อสัปดาห์</label>
                     <input type="number" id="cover-hours-per-week" min="1" max="5" value="2"
                         class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
                         placeholder="เช่น 2">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">📅 วันเปิดภาคเรียน (วันแรกที่สอน)</label>
+                    <input type="date" id="cover-semester-start"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all">
+                    <p class="text-xs text-slate-400 mt-1">ใช้กำหนดวันที่บนตารางเวลาเรียนใน Excel</p>
                 </div>
             </div>
 
@@ -1302,14 +1345,15 @@
         let coverConfig = {
             school: 'โรงเรียนบ้านขัวก่าย',
             office: 'สำนักงานเขตพื้นที่การศึกษาประถมศึกษา สกลนคร เขต 3',
+            coverLine1: 'สมุดบันทึกผลการพัฒนาผู้เรียนรายวิชา',
+            coverLine2: 'ตามหลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พุทธศักราช 2551',
             term: '2',
             year: '2568',
             teacher: 'ครูผู้สอน',
             advisors: [],
             head: 'หัวหน้ากลุ่มสาระการเรียนรู้',
             director: 'ผู้อำนวยการโรงเรียน',
-            directorTitle: 'ผู้อำนวยการโรงเรียนบ้านขัวก่าย',
-            approvalStatus: 'approved'
+            directorTitle: 'ผู้อำนวยการโรงเรียนบ้านขัวก่าย'
         };
 
         function loadCoverConfig() {
@@ -1324,21 +1368,22 @@
                         if (parsed.advisor1) parsed.advisors.push(parsed.advisor1);
                         if (parsed.advisor2) parsed.advisors.push(parsed.advisor2);
                     }
-                    if (!parsed.approvalStatus) parsed.approvalStatus = 'approved';
                     coverConfig = { ...coverConfig, ...parsed };
+                    delete coverConfig.approvalStatus;
                 } catch (e) { }
             } else {
                 coverConfig = {
                     school: 'โรงเรียนบ้านขัวก่าย',
                     office: 'สำนักงานเขตพื้นที่การศึกษาประถมศึกษา สกลนคร เขต 3',
+                    coverLine1: 'สมุดบันทึกผลการพัฒนาผู้เรียนรายวิชา',
+                    coverLine2: 'ตามหลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พุทธศักราช 2551',
                     term: '2',
                     year: '2568',
                     teacher: 'ครูผู้สอน',
                     advisors: [],
                     head: 'หัวหน้ากลุ่มสาระการเรียนรู้',
                     director: 'ผู้อำนวยการโรงเรียน',
-                    directorTitle: 'ผู้อำนวยการโรงเรียนบ้านขัวก่าย',
-                    approvalStatus: 'approved'
+                    directorTitle: 'ผู้อำนวยการโรงเรียนบ้านขัวก่าย'
                 };
             }
         }
@@ -1378,6 +1423,10 @@
         function saveCoverConfig() {
             coverConfig.school = document.getElementById('cover-school').value;
             coverConfig.office = document.getElementById('cover-office').value;
+            const coverLine1Input = document.getElementById('cover-line-1');
+            const coverLine2Input = document.getElementById('cover-line-2');
+            coverConfig.coverLine1 = coverLine1Input ? coverLine1Input.value : (coverConfig.coverLine1 || '');
+            coverConfig.coverLine2 = coverLine2Input ? coverLine2Input.value : (coverConfig.coverLine2 || '');
             coverConfig.term = document.getElementById('cover-term').value;
             coverConfig.year = document.getElementById('cover-year').value;
             coverConfig.teacher = document.getElementById('cover-teacher').value;
@@ -1386,11 +1435,10 @@
             const directorTitleInput = document.getElementById('cover-director-title');
             coverConfig.directorTitle = directorTitleInput ? directorTitleInput.value : (coverConfig.directorTitle || '');
 
-            const approvalInput = document.querySelector('input[name="cover-approval"]:checked');
-            coverConfig.approvalStatus = approvalInput ? approvalInput.value : 'approved';
-
             const hpwInput = document.getElementById('cover-hours-per-week');
             coverConfig.hoursPerWeek = hpwInput ? parseInt(hpwInput.value) || 2 : 2;
+            const semStartInput = document.getElementById('cover-semester-start');
+            coverConfig.semesterStart = semStartInput ? semStartInput.value : '';
 
             // Gather advisors from inputs
             const inputs = document.querySelectorAll('.advisor-input');
@@ -1409,6 +1457,10 @@
         function openCoverConfig() {
             document.getElementById('cover-school').value = coverConfig.school || '';
             document.getElementById('cover-office').value = coverConfig.office || '';
+            const coverLine1Input = document.getElementById('cover-line-1');
+            const coverLine2Input = document.getElementById('cover-line-2');
+            if (coverLine1Input) coverLine1Input.value = coverConfig.coverLine1 || 'สมุดบันทึกผลการพัฒนาผู้เรียนรายวิชา';
+            if (coverLine2Input) coverLine2Input.value = coverConfig.coverLine2 || 'ตามหลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พุทธศักราช 2551';
             document.getElementById('cover-term').value = coverConfig.term || '';
             document.getElementById('cover-year').value = coverConfig.year || '';
             document.getElementById('cover-teacher').value = coverConfig.teacher || '';
@@ -1418,14 +1470,11 @@
             const directorTitleInput = document.getElementById('cover-director-title');
             if (directorTitleInput) directorTitleInput.value = coverConfig.directorTitle || '';
 
-            if (coverConfig.approvalStatus === 'disapproved') {
-                document.getElementById('cover-approval-no').checked = true;
-            } else {
-                document.getElementById('cover-approval-yes').checked = true;
-            }
-
             const hpwInput = document.getElementById('cover-hours-per-week');
             if (hpwInput) hpwInput.value = coverConfig.hoursPerWeek || 2;
+
+            const semStartInput = document.getElementById('cover-semester-start');
+            if (semStartInput) semStartInput.value = coverConfig.semesterStart || '2025-11-03';
 
             document.getElementById('coverConfigModal').classList.remove('hidden');
         }
@@ -1455,7 +1504,9 @@
         }
 
         async function init() {
-            const today = new Date().toISOString().split('T')[0];
+            // ใช้ local date ของเครื่อง (ไม่ใช้ UTC เพื่อป้องกัน timezone shift)
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
             document.getElementById('global-att-date').value = today;
             const { data } = await _sb.from('classes').select('*').order('grade_level', { ascending: true });
             if (data) {
@@ -1472,6 +1523,7 @@
 
         async function changeActiveSubject(id) {
             if (!id) return;
+            await flushPendingScores();
             activeSubj = classes.find(c => c.id == id);
             await loadScoreConfig();
             loadCoverConfig();
@@ -1485,9 +1537,10 @@
         }
 
         async function loadData() {
+            await flushPendingScores();
             const { data } = await _sb.from('students').select('*, scores(*), attendance(*)').eq('class_name', activeSubj.grade_level).order('roll_number', { ascending: true });
             students = data || [];
-            renderDashboard(); renderAttendance(); renderStats(); renderScores(); renderTraits(); renderReading();
+            renderDashboard(); renderAttendance(); renderStats(); renderScores(); renderTraits(); renderReading(); renderCompetency();
         }
 
         function syncAttendanceDate() { if (activeSubj) renderAttendance(); }
@@ -1718,7 +1771,7 @@
                             else if (st === 'D') da += hpw;
                         }
                     }));
-                    const totalAtt = totalSlots - kh - la - pa - da;
+                    const totalAtt = totalSlots - kh - la;
 
                     return `<tr style="height:6mm;">
                         <td style="font-size:6.5pt;">${s.roll_number}</td>
@@ -1892,8 +1945,8 @@
                 <table style="width:100%; border-collapse:collapse; font-size:14pt; border:none; margin-bottom:5mm;">
                     <tr><td colspan="4" style="text-align:center; font-size:16pt; font-weight:bold; padding-bottom:5mm;">
                         ${coverConfig.school || 'โรงเรียนบ้านขัวก่าย'}<br>
-                        สมุดบันทึกผลการพัฒนาผู้เรียนรายวิชา<br>
-                        ตามหลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พุทธศักราช 2551<br>
+                        ${coverConfig.coverLine1 || 'สมุดบันทึกผลการพัฒนาผู้เรียนรายวิชา'}<br>
+                        ${coverConfig.coverLine2 || 'ตามหลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พุทธศักราช 2551'}<br>
                         ${coverConfig.office || 'สำนักงานเขตพื้นที่การศึกษาประถมศึกษา สกลนคร เขต 3'}
                     </td></tr>
                     <tr><td style="width:25%;"></td><td style="width:25%;"></td><td style="width:25%;"></td><td style="width:25%;"></td></tr>
@@ -1955,8 +2008,14 @@
                 <br><br>
                 <div style="display:flex; justify-content:flex-end; padding-right:15mm; margin-top:10mm;">
                     <table style="text-align:left; font-size:14pt; margin-bottom: 5mm;">
-                        <tr><td style="width: 30px; text-align: center; border: 1px solid #000;">${coverConfig.approvalStatus === 'approved' ? '✓' : ''}</td><td style="padding-left: 5px;">อนุมัติผลการเรียน</td></tr>
-                        <tr><td style="width: 30px; text-align: center; border: 1px solid #000;">${coverConfig.approvalStatus === 'disapproved' ? '✓' : ''}</td><td style="padding-left: 5px;">ไม่อนุมัติผลการเรียน</td></tr>
+                        <tr>
+                            <td style="width: 28px; height: 28px; text-align: center; border: 1px solid #000; font-size: 16pt; line-height: 1;">&#9744;</td>
+                            <td style="padding-left: 5px;">อนุมัติผลการเรียน</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 28px; height: 28px; text-align: center; border: 1px solid #000; font-size: 16pt; line-height: 1;">&#9744;</td>
+                            <td style="padding-left: 5px;">ไม่อนุมัติผลการเรียน</td>
+                        </tr>
                     </table>
                 </div>
                 <div style="display:flex; justify-content:flex-end; padding-right:15mm;">
@@ -2297,7 +2356,8 @@
 
         function stopScanner() { if (scanner && scanner.isScanning) scanner.stop(); }
 
-        function switchTab(id) {
+        async function switchTab(id) {
+            await flushPendingScores();
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-link-modern').forEach(el => el.classList.remove('active-tab'));
 
@@ -2318,6 +2378,7 @@
             if (id === 'att-summary-report') renderAttendanceSummaryReport();
             if (id === 'traits') renderTraits();
             if (id === 'reading') renderReading();
+            if (id === 'competency') renderCompetency();
         }
 
         function setAttMode(m) {
@@ -2529,6 +2590,14 @@
             { id: 'r5', name: '5. สรุปอภิปรายขยายความ' },
         ];
 
+        const COMP_SKILLS = [
+            { id: 'c1', name: '1. การสื่อสาร' },
+            { id: 'c2', name: '2. การคิด' },
+            { id: 'c3', name: '3. การแก้ปัญหา' },
+            { id: 'c4', name: '4. การใช้ทักษะชีวิต' },
+            { id: 'c5', name: '5. การใช้เทคโนโลยี' },
+        ];
+
         function renderTraits() {
             const thead = document.getElementById('traits-thead');
             thead.innerHTML = `<tr>
@@ -2676,7 +2745,77 @@
             setTimeout(() => renderReading(), 200);
         }
 
-        // ============ DYNAMIC SCORES RENDERING ============
+        function toggleAllCompetencyCheck(checked) {
+            document.querySelectorAll('.competency-check').forEach(cb => cb.checked = checked);
+        }
+
+        function renderCompetency() {
+            const thead = document.getElementById('competency-thead');
+            if (!thead) return;
+            thead.innerHTML = `<tr>
+                <th class="p-2 w-8 text-xs text-center sticky left-0 bg-slate-50 z-10 border-r border-slate-200"><input type="checkbox" checked onchange="toggleAllCompetencyCheck(this.checked)" class="w-4 h-4 accent-purple-500 cursor-pointer" title="เลือกทั้งหมด"></th>
+                <th class="p-2 w-10 text-xs text-center sticky left-8 bg-slate-50 z-10 border-r border-slate-200">ที่</th>
+                <th class="text-left p-2 text-xs sticky left-[4.5rem] bg-slate-50 z-10 border-r border-slate-200 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.1)]">ชื่อ-นามสกุล</th>
+                ${COMP_SKILLS.map(c => `<th class="p-2 w-16 border-l border-slate-200 min-w-[4rem] align-bottom"><div class="writing-vertical text-left mx-auto text-slate-500" style="writing-mode: vertical-rl; transform: rotate(180deg); height: 110px; font-size: 13px; font-weight: 800; line-height: 1;">${c.name}</div></th>`).join('')}
+                <th class="p-2 w-4"></th>
+            </tr>`;
+
+            document.getElementById('competency-body').innerHTML = students.map(s => {
+                const scoreRecord = s.scores.find(x => x.subject_name === activeSubj.subject_name) || {};
+                let scoreData = {};
+                if (scoreRecord.score_data) {
+                    scoreData = typeof scoreRecord.score_data === 'string'
+                        ? JSON.parse(scoreRecord.score_data)
+                        : scoreRecord.score_data;
+                }
+
+                const cells = COMP_SKILLS.map(c => {
+                    const value = scoreData[c.id] !== undefined ? scoreData[c.id] : '';
+                    return `<td class="text-center p-1 border-l border-slate-100/50 hover:bg-slate-50">
+                        <select onchange="upSc('${s.id}','${c.id}',this.value)" class="w-10 h-10 text-center bg-slate-50 rounded-xl p-0 border-none ring-1 ring-slate-200 outline-none focus:ring-purple-400 focus:bg-white transition-all text-lg font-bold appearance-none cursor-pointer hover:ring-purple-300 hover:bg-white" style="text-align-last: center;">
+                            <option value="" ${value === '' ? 'selected' : ''}>-</option>
+                            <option value="3" ${value == 3 ? 'selected' : ''}>3</option>
+                            <option value="2" ${value == 2 ? 'selected' : ''}>2</option>
+                            <option value="1" ${value == 1 ? 'selected' : ''}>1</option>
+                            <option value="0" ${value == 0 ? 'selected' : ''}>0</option>
+                        </select>
+                    </td>`;
+                }).join('');
+
+                return `<tr data-row-id="${s.id}" class="hover:bg-slate-50/50 transition-colors group">
+                    <td class="p-2 text-center sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-colors"><input type="checkbox" checked class="competency-check w-4 h-4 accent-purple-500 cursor-pointer" data-student-id="${s.id}"></td>
+                    <td class="p-2 text-slate-400 font-medium text-xs text-center sticky left-8 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-colors">${s.roll_number}</td>
+                    <td class="text-left font-bold text-slate-700 p-2 text-sm whitespace-nowrap sticky left-[4.5rem] bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.05)] transition-colors">${s.name}</td>
+                    ${cells}
+                    <td class="p-2"></td>
+                </tr>`;
+            }).join('');
+        }
+
+        function randomScoreCompetency() {
+            const checkedIds = getCheckedStudentIds('competency-check');
+            if (checkedIds.length === 0) { alert('กรุณาเลือกนักเรียนอย่างน้อย 1 คน'); return; }
+            if (!confirm(`ต้องการสุ่มคะแนนสมรรถนะสำคัญให้นักเรียน ${checkedIds.length} คน?`)) return;
+            students.filter(s => checkedIds.includes(String(s.id))).forEach(s => {
+                COMP_SKILLS.forEach(c => {
+                    const randomVal = Math.floor(Math.random() * 3) + 1;
+                    upSc(s.id, c.id, randomVal);
+                });
+            });
+            setTimeout(() => renderCompetency(), 200);
+        }
+
+        function setAllCompetency3() {
+            const checkedIds = getCheckedStudentIds('competency-check');
+            if (checkedIds.length === 0) { alert('กรุณาเลือกนักเรียนอย่างน้อย 1 คน'); return; }
+            if (!confirm(`ต้องการให้คะแนนสมรรถนะสำคัญ = 3 (ดีเยี่ยม) ให้นักเรียน ${checkedIds.length} คน?`)) return;
+            students.filter(s => checkedIds.includes(String(s.id))).forEach(s => {
+                COMP_SKILLS.forEach(c => {
+                    upSc(s.id, c.id, 3);
+                });
+            });
+            setTimeout(() => renderCompetency(), 200);
+        }
         function renderScores() {
             const totalMax = scoreConfig.reduce((sum, cat) => sum + cat.maxScore, 0);
             document.getElementById('score-config-summary').innerHTML = `
@@ -2710,7 +2849,7 @@
                     totalScore += value;
                     return `<td class="text-center p-2">
                         <input type="number" onchange="upSc('${s.id}','${cat.id}',this.value)" value="${value}" 
-                            max="${cat.maxScore}" min="0"
+                            max="${cat.maxScore}" min="0" data-student-id="${s.id}" data-field="${cat.id}"
                             class="w-16 text-center bg-slate-50 rounded-xl p-2 border-none ring-1 ring-slate-200 outline-none focus:ring-indigo-400 transition-all text-lg font-bold">
                     </td>`;
                 }).join('');
@@ -2727,6 +2866,22 @@
 
         const scoreTimers = {};
         const pendingScores = {};
+
+        function getLocalScoreData(student, subjectName) {
+            const scoreRecord = student?.scores?.find(x => x.subject_name === subjectName);
+            let scoreData = scoreRecord?.score_data || {};
+            if (typeof scoreData === 'string') {
+                try { scoreData = JSON.parse(scoreData); }
+                catch { scoreData = {}; }
+            }
+            return { scoreRecord, scoreData };
+        }
+
+        async function flushPendingScores() {
+            const ids = Object.keys(pendingScores);
+            if (ids.length === 0 || !activeSubj) return;
+            await Promise.all(ids.map(id => saveScores(id)));
+        }
 
         function upSc(id, field, val) {
             const key = `${id}_${field}`;
@@ -2770,30 +2925,35 @@
 
         async function saveScores(id) {
             if (!pendingScores[id]) return;
+            try {
+                const student = students.find(s => s.id == id);
+                if (!student) return;
 
-            const { data: existingData } = await _sb.from('scores')
-                .select('*')
-                .eq('student_id', id)
-                .eq('subject_name', activeSubj.subject_name)
-                .single();
+                const { scoreRecord, scoreData } = getLocalScoreData(student, activeSubj.subject_name);
 
-            let scoreData = {};
-            if (existingData && existingData.score_data) {
-                scoreData = typeof existingData.score_data === 'string'
-                    ? JSON.parse(existingData.score_data)
-                    : existingData.score_data;
+                Object.assign(scoreData, pendingScores[id]);
+
+                const { error } = await _sb.from('scores').upsert({
+                    student_id: id,
+                    subject_name: activeSubj.subject_name,
+                    score_data: scoreData
+                }, { onConflict: 'student_id, subject_name' });
+
+                if (error) throw error;
+
+                if (!scoreRecord) {
+                    student.scores.push({ subject_name: activeSubj.subject_name, score_data: scoreData });
+                } else {
+                    scoreRecord.score_data = scoreData;
+                }
+
+                delete pendingScores[id];
+                showSaveIndicator(id);
+                updateTotalDisplay(id);
+            } catch (err) {
+                console.error('saveScores error:', err);
+                showToast('เกิดข้อผิดพลาด: ' + (err.message || err), true);
             }
-
-            Object.assign(scoreData, pendingScores[id]);
-
-            await _sb.from('scores').upsert({
-                student_id: id,
-                subject_name: activeSubj.subject_name,
-                score_data: scoreData
-            }, { onConflict: 'student_id, subject_name' });
-
-            delete pendingScores[id];
-            showSaveIndicator(id);
         }
 
         function showSaveIndicator(id) {
@@ -2801,6 +2961,97 @@
             if (row) {
                 row.style.background = 'rgba(16, 185, 129, 0.1)';
                 setTimeout(() => row.style.background = '', 500);
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('save-toast');
+            const icon = document.getElementById('save-toast-icon');
+            const msgEl = document.getElementById('save-toast-msg');
+            if (!toast) return;
+            icon.textContent = isError ? '❌' : '✅';
+            msgEl.textContent = msg;
+            toast.style.background = isError
+                ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                : 'linear-gradient(135deg, #10b981, #0d9488)';
+            toast.classList.remove('opacity-0', 'scale-90');
+            toast.classList.add('opacity-100', 'scale-100');
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'scale-100');
+                toast.classList.add('opacity-0', 'scale-90');
+            }, 3000);
+        }
+
+        async function saveAllScores() {
+            if (!activeSubj) { showToast('กรุณาเลือกรายวิชาก่อน', true); return; }
+            const btn = document.getElementById('btn-save-all-scores');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg> กำลังบันทึก...`;
+            }
+            try {
+                const inputs = document.querySelectorAll('#score-body input[data-student-id][data-field]');
+                const collectedByStudent = {};
+                inputs.forEach(input => {
+                    const id = input.dataset.studentId;
+                    const field = input.dataset.field;
+                    const val = parseFloat(input.value) || 0;
+                    if (!collectedByStudent[id]) collectedByStudent[id] = {};
+                    collectedByStudent[id][field] = val;
+                });
+
+                const ids = Object.keys(collectedByStudent);
+                if (ids.length === 0) { showToast('ไม่พบข้อมูลคะแนนที่จะบันทึก', true); return; }
+
+                const rowsToSave = [];
+                for (const id of ids) {
+                    const student = students.find(s => s.id == id);
+                    if (!student) continue;
+
+                    const localScore = getLocalScoreData(student, activeSubj.subject_name);
+                    let scoreRecord = localScore.scoreRecord;
+                    const scoreData = localScore.scoreData;
+                    Object.assign(scoreData, collectedByStudent[id]);
+
+                    // Update in-memory local state so it doesn't vanish on re-render
+                    if (!scoreRecord) {
+                        scoreRecord = { subject_name: activeSubj.subject_name, score_data: scoreData };
+                        student.scores.push(scoreRecord);
+                    } else {
+                        scoreRecord.score_data = scoreData;
+                    }
+
+                    rowsToSave.push({
+                        student_id: student.id,
+                        subject_name: activeSubj.subject_name,
+                        score_data: scoreData
+                    });
+                }
+
+                if (rowsToSave.length === 0) {
+                    showToast('ไม่พบข้อมูลนักเรียนที่จะบันทึก', true);
+                    return;
+                }
+
+                const { error } = await _sb.from('scores').upsert(rowsToSave, { onConflict: 'student_id, subject_name' });
+                if (error) throw error;
+
+                ids.forEach(id => {
+                    delete pendingScores[id];
+                    showSaveIndicator(id);
+                    updateTotalDisplay(id);
+                });
+
+                showToast(`✔ บันทึกคะแนน ${ids.length} คน สำเร็จแล้ว!`);
+            } catch (err) {
+                console.error('saveAllScores error:', err);
+                showToast('เกิดข้อผิดพลาด: ' + (err.message || err), true);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg> 💾 บันทึกคะแนนทั้งหมด`;
+                }
             }
         }
 
