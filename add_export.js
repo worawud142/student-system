@@ -87,6 +87,28 @@ async function exportExcel() {
             ? coverConfig
             : { term: '2', year: '2568', teacher: '', advisors: [], director: '' };
         const hpw  = conf.hoursPerWeek || 2;
+        const DEFAULT_HOLIDAY_DATES = [
+            '2025-12-05',
+            '2025-12-10',
+            '2025-12-31',
+            '2026-01-01',
+            '2026-01-02',
+            '2026-03-03'
+        ];
+        const todayYmd = (() => {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        })();
+        const holidaySet = new Set(
+            Array.isArray(conf.holidayDates)
+                ? conf.holidayDates.filter(Boolean)
+                : typeof conf.holidayDates === 'string'
+                    ? conf.holidayDates.split(',').map(s => s.trim()).filter(Boolean)
+                    : DEFAULT_HOLIDAY_DATES
+        );
 
         const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.',
                            'ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -155,7 +177,9 @@ async function exportExcel() {
         // ── 2 & 3. เวลาเรียน (2) และ (3) ─────────────────────
         // col G(7)–BC(55) = 49 col, 7 cols/week [อา,จ,อ,พ,พฤ,ศ,ส]
         // สรุปไม่มี (template ดึงจาก ชีต 4 ผ่าน cross-sheet formula)
-        // mark: มา→"", ขาด→"ข", ลา→"ล", สาย→"ป", ลากิจ→"ด"
+        // mark: มา→"/", ขาด→"ข", ลา→"ล", สาย→"ป", ลากิจ→"ด"
+        // วันที่ผ่านมาแล้วแต่ยังไม่มีข้อมูลเช็คชื่อ: ให้ถือว่ามาเรียน
+        // ยกเว้นวันที่กำหนดไว้เป็นวันหยุดราชการใน conf.holidayDates
         function fillAttSheet23(wsName, datesSpan) {
             const ws = wb.getWorksheet(wsName);
             if (!ws) return;
@@ -193,11 +217,14 @@ async function exportExcel() {
                     let mark = '';
                     if (dStr && meetingDays.includes(dayInWeek)) {
                         const st = attMap[dStr] || '';
-                        if      (st === 'P') mark = '';
+                        const isHoliday = holidaySet.has(dStr);
+                        const isPastDay = dStr < todayYmd;
+                        if      (st === 'P') mark = '/';
                         else if (st === 'A') mark = 'ข';
                         else if (st === 'L') mark = 'ล';
                         else if (st === 'T') mark = 'ป';
                         else if (st === 'D') mark = 'ด';
+                        else if (isPastDay && !isHoliday) mark = '/';
                     }
                     safeSetRC(ws, r, 7 + c, mark);
                 }
@@ -244,11 +271,14 @@ async function exportExcel() {
                     let mark = '';
                     if (dStr && meetingDays.includes(dayInWeek)) {
                         const st = attMap[dStr] || '';
-                        if      (st === 'P') mark = '';
+                        const isHoliday = holidaySet.has(dStr);
+                        const isPastDay = dStr < todayYmd;
+                        if      (st === 'P') mark = '/';
                         else if (st === 'A') mark = 'ข';
                         else if (st === 'L') mark = 'ล';
                         else if (st === 'T') mark = 'ป';
                         else if (st === 'D') mark = 'ด';
+                        else if (isPastDay && !isHoliday) mark = '/';
                     }
                     safeSetRC(ws, r, 8 + c, mark);
                 }

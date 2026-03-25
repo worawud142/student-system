@@ -1251,6 +1251,13 @@
                         class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all">
                     <p class="text-xs text-slate-400 mt-1">ใช้กำหนดวันที่บนตารางเวลาเรียนใน Excel</p>
                 </div>
+                <div>
+                    <label class="text-xs text-slate-500 uppercase tracking-wider mb-1 block">วันหยุดราชการ</label>
+                    <textarea id="cover-holidays" rows="4"
+                        class="w-full border border-slate-200 bg-white/50 rounded-2xl p-4 outline-none focus:border-indigo-400 transition-all"
+                        placeholder="2025-12-05, 2025-12-10, 2025-12-31"></textarea>
+                    <p class="text-xs text-slate-400 mt-1">ใส่วันที่รูปแบบ YYYY-MM-DD คั่นด้วยจุลภาคหรือขึ้นบรรทัดใหม่</p>
+                </div>
             </div>
 
             <div class="flex justify-end space-x-3 mt-8">
@@ -1353,8 +1360,33 @@
             advisors: [],
             head: 'หัวหน้ากลุ่มสาระการเรียนรู้',
             director: 'ผู้อำนวยการโรงเรียน',
-            directorTitle: 'ผู้อำนวยการโรงเรียนบ้านขัวก่าย'
+            directorTitle: 'ผู้อำนวยการโรงเรียนบ้านขัวก่าย',
+            holidayDates: [
+                '2025-12-05',
+                '2025-12-10',
+                '2025-12-31',
+                '2026-01-01',
+                '2026-01-02',
+                '2026-03-03'
+            ]
         };
+
+        function normalizeHolidayDates(value) {
+            if (Array.isArray(value)) {
+                return value.map(v => String(v).trim()).filter(Boolean);
+            }
+            if (typeof value === 'string') {
+                return value
+                    .split(/[\n,]/)
+                    .map(v => v.trim())
+                    .filter(Boolean);
+            }
+            return (coverConfig.holidayDates || []).slice();
+        }
+
+        function holidayDatesToText(value) {
+            return normalizeHolidayDates(value).join(', ');
+        }
 
         function loadCoverConfig() {
             if (!activeSubj) return;
@@ -1370,6 +1402,7 @@
                     }
                     coverConfig = { ...coverConfig, ...parsed };
                     delete coverConfig.approvalStatus;
+                    coverConfig.holidayDates = normalizeHolidayDates(coverConfig.holidayDates);
                 } catch (e) { }
             } else {
                 coverConfig = {
@@ -1383,7 +1416,15 @@
                     advisors: [],
                     head: 'หัวหน้ากลุ่มสาระการเรียนรู้',
                     director: 'ผู้อำนวยการโรงเรียน',
-                    directorTitle: 'ผู้อำนวยการโรงเรียนบ้านขัวก่าย'
+                    directorTitle: 'ผู้อำนวยการโรงเรียนบ้านขัวก่าย',
+                    holidayDates: [
+                        '2025-12-05',
+                        '2025-12-10',
+                        '2025-12-31',
+                        '2026-01-01',
+                        '2026-01-02',
+                        '2026-03-03'
+                    ]
                 };
             }
         }
@@ -1439,6 +1480,8 @@
             coverConfig.hoursPerWeek = hpwInput ? parseInt(hpwInput.value) || 2 : 2;
             const semStartInput = document.getElementById('cover-semester-start');
             coverConfig.semesterStart = semStartInput ? semStartInput.value : '';
+            const holidayInput = document.getElementById('cover-holidays');
+            coverConfig.holidayDates = normalizeHolidayDates(holidayInput ? holidayInput.value : coverConfig.holidayDates);
 
             // Gather advisors from inputs
             const inputs = document.querySelectorAll('.advisor-input');
@@ -1475,6 +1518,8 @@
 
             const semStartInput = document.getElementById('cover-semester-start');
             if (semStartInput) semStartInput.value = coverConfig.semesterStart || '2025-11-03';
+            const holidayInput = document.getElementById('cover-holidays');
+            if (holidayInput) holidayInput.value = holidayDatesToText(coverConfig.holidayDates);
 
             document.getElementById('coverConfigModal').classList.remove('hidden');
         }
