@@ -284,11 +284,18 @@ async function exportExcel() {
                     return meetingDays.includes(dayInWeek) ? sum + hpw : sum;
                 }, 0);
                 const totalAtt = totalSlots - kh - la;
-                const rowRange = `H${r}:AW${r}`;
+                const attRanges = [
+                    `'เวลาเรียน (2)'!G${r}:BC${r}`,
+                    `'เวลาเรียน (3)'!G${r}:BC${r}`,
+                    `'เวลาเรียน (4)'!H${r}:AW${r}`
+                ];
+                const missedExpr = attRanges
+                    .map(range => `(COUNTIF(${range},"ข")+COUNTIF(${range},"ล"))`)
+                    .join('+');
                 setFormulaCell(
                     ws,
                     [r, 50],
-                    `${totalSlots}-(COUNTIF(${rowRange},"ข")+COUNTIF(${rowRange},"ล"))*${hpw}`,
+                    `${totalSlots}-(${missedExpr})*${hpw}`,
                     totalAtt
                 );
             });
