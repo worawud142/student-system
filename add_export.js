@@ -284,7 +284,13 @@ async function exportExcel() {
                     return meetingDays.includes(dayInWeek) ? sum + hpw : sum;
                 }, 0);
                 const totalAtt = totalSlots - kh - la;
-                safeSetRC(ws, r, 50, totalAtt);
+                const rowRange = `H${r}:AW${r}`;
+                setFormulaCell(
+                    ws,
+                    [r, 50],
+                    `${totalSlots}-(COUNTIF(${rowRange},"ข")+COUNTIF(${rowRange},"ล"))*${hpw}`,
+                    totalAtt
+                );
             });
 
             for (let i = n; i < 35; i++) {
